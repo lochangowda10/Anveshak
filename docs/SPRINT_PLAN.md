@@ -17,14 +17,14 @@ When taking on a task:
 
 | Task                                        | Owner          | Status |
 |---------------------------------------------|----------------|--------|
-| Initialize monorepo structure               | Lochan         | [TODO] |
-| Set up `pyproject.toml` + Ruff + Black      | Lochan         | [TODO] |
-| Set up React + Vite + TypeScript + ESLint   | Dev 2          | [TODO] |
-| Create `docker-compose.yml` (Postgres + API)| Lochan         | [TODO] |
+| Initialize monorepo structure               | Lochan         | [WORKING: OpenCode] |
+| Set up `pyproject.toml` + Ruff + Black      | Lochan         | [WORKING: OpenCode] |
+| Set up React + Vite + TypeScript + ESLint   | Dev 2          | [WORKING: OpenCode] |
+| Create `docker-compose.yml` (Postgres + API)| Lochan         | [WORKING: OpenCode] |
 | Create `.env.example`                       | Lochan         | [FINISHED: Lochan] |
-| Set up CI (GitHub Actions: lint + test)     | Dev 2          | [TODO] |
-| Everyone clones, runs `docker compose up`   | Both           | [TODO] |
-| Create initial Alembic migration (empty)    | Lochan         | [TODO] |
+| Set up CI (GitHub Actions: lint + test)     | Dev 2          | [WORKING: OpenCode] |
+| Everyone clones, runs `docker compose up`   | Both           | [WORKING: OpenCode] |
+| Create initial Alembic migration (empty)    | Lochan         | [WORKING: OpenCode] |
 
 **Exit Criteria:** `docker compose up` starts Postgres + FastAPI + React on
 every team member's machine.
