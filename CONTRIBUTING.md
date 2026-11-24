@@ -7,14 +7,23 @@
 ## 1. Git Workflow — Trunk-Based with Feature Branches
 
 ```
-main (protected — never push directly)
-  └── dev (integration branch — PRs merge here)
+main (protected — release baseline)
+  └── dev (integration branch — team syncs here)
        ├── feat/case-intake-api
        ├── feat/tron-adapter
        ├── feat/graph-engine
        ├── fix/pruning-threshold
        └── docs/api-reference
 ```
+
+### The 2-Developer Sync Protocol
+
+To avoid overlapping work between the two active developers:
+1. **Always sync before starting:** `git checkout dev && git pull origin dev`.
+2. **Claim task:** Mark task as `[WORKING: <Name>]` in `docs/SPRINT_PLAN.md` and push to `dev`.
+3. **Branch:** Create `feat/<task-name>` off `dev`.
+4. **Merge & Mark Done:** Merge into `dev`, update `docs/SPRINT_PLAN.md` to `[FINISHED: <Name>]`, and push to `dev`.
+5. **Ping teammate** so they know new functionality is available.
 
 ### Branch Naming Convention
 
