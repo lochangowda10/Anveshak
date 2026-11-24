@@ -105,7 +105,7 @@
   "tags": ["pig-butchering", "investment-fraud"],
   "seed_wallets": [
     {
-      "address": "TN2YqTv7ykawJjgqQfcbRGFyEY8ehPkuGM",
+      "address": "TFNyk1vSQ82XBvvboW7mLBtneeDToVt1KW",
       "chain": "TRON",
       "token": "USDT",
       "reported_amount": 50000.00,
@@ -134,7 +134,7 @@
   "seed_wallets": [
     {
       "id": "660e8400-e29b-41d4-a716-446655440001",
-      "address": "TN2YqTv7ykawJjgqQfcbRGFyEY8ehPkuGM",
+      "address": "TFNyk1vSQ82XBvvboW7mLBtneeDToVt1KW",
       "chain": "TRON",
       "token": "USDT",
       "reported_amount": 50000.00,
@@ -180,7 +180,7 @@
       "created_at": "2026-11-24T17:00:00Z",
       "updated_at": "2026-11-24T17:05:00Z",
       "seed_wallets_count": 1,
-      "primary_seed_address": "TN2YqTv7ykawJjgqQfcbRGFyEY8ehPkuGM",
+      "primary_seed_address": "TFNyk1vSQ82XBvvboW7mLBtneeDToVt1KW",
       "tags": ["pig-butchering", "investment-fraud"]
     }
   ],
@@ -224,7 +224,7 @@
   "seed_wallets": [
     {
       "id": "660e8400-e29b-41d4-a716-446655440001",
-      "address": "TN2YqTv7ykawJjgqQfcbRGFyEY8ehPkuGM",
+      "address": "TFNyk1vSQ82XBvvboW7mLBtneeDToVt1KW",
       "chain": "TRON",
       "token": "USDT",
       "reported_amount": 50000.00,
@@ -262,7 +262,7 @@
 | `degree_cap` | `int` | `100` | `10 <= x <= 1000` |
 | `amount_threshold_pct` | `float` | `0.01` | `0.0 <= x <= 1.0` |
 
-**Behavior:** Transitions case `status` from `PENDING` or `TRACE_FAILED` to `TRACING`, spawns background async task executing Graph Engine → Attribution & Ranking → Evidence Assembly, and returns immediately.
+**Behavior:** Allowed ONLY when `status IN ("PENDING", "TRACE_FAILED")`. Transitions case `status` to `TRACING`, spawns background async task executing Graph Engine → Attribution & Ranking → Evidence Assembly, and returns immediately.
 
 **Response `202 Accepted`:**
 ```json
@@ -275,7 +275,9 @@
 
 **Error Responses:**
 - `404 Not Found`: `{"detail": "Case not found"}`
-- `409 Conflict`: `{"detail": "Trace already in progress"}` (if `status == "TRACING"`)
+- `409 Conflict`:
+  - If `status == "TRACING"`: `{"detail": "Trace already in progress"}`
+  - If `status IN ("TRACED", "ANALYZED", "EXPORTED", "CLOSED")`: `{"detail": "Case has already been traced; create a new case to re-run"}`
 - `422 Unprocessable Entity`: Invalid config values (e.g. `hop_limit: 10`)
 
 ---
@@ -293,7 +295,7 @@
   "nodes": [
     {
       "data": {
-        "id": "TN2YqTv7ykawJjgqQfcbRGFyEY8ehPkuGM",
+        "id": "TFNyk1vSQ82XBvvboW7mLBtneeDToVt1KW",
         "label": "TN2YqTv7...kuGM",
         "type": "seed",
         "hop_depth": 0,
@@ -307,7 +309,7 @@
     },
     {
       "data": {
-        "id": "TWazirXdeposit1234567890123456",
+        "id": "TNgEDH3RhWAWm7yBDmJgwWBZiGkjEnFaK7",
         "label": "TWazirXd...3456",
         "type": "vasp_candidate",
         "hop_depth": 2,
@@ -324,8 +326,8 @@
     {
       "data": {
         "id": "aaa1110000000000000000000000000000000000000000000000000000000001",
-        "source": "TN2YqTv7ykawJjgqQfcbRGFyEY8ehPkuGM",
-        "target": "TLayerA1qwerty123456789012345678",
+        "source": "TFNyk1vSQ82XBvvboW7mLBtneeDToVt1KW",
+        "target": "TNMKZSJx7g5Ryv91BXgv2q56VRQwi1ozue",
         "amount": 49500.0,
         "token": "USDT",
         "timestamp": "2026-11-20T15:10:00Z",
@@ -378,7 +380,7 @@
     {
       "id": "770e8400-e29b-41d4-a716-446655440002",
       "rank": 1,
-      "address": "TWazirXdeposit1234567890123456",
+      "address": "TNgEDH3RhWAWm7yBDmJgwWBZiGkjEnFaK7",
       "chain": "TRON",
       "label": "WazirX",
       "label_source": "public",
@@ -433,7 +435,7 @@
   "generated_at": "2026-11-24T17:05:12Z",
   "seed_wallets": [
     {
-      "address": "TN2YqTv7ykawJjgqQfcbRGFyEY8ehPkuGM",
+      "address": "TFNyk1vSQ82XBvvboW7mLBtneeDToVt1KW",
       "chain": "TRON",
       "reported_amount": 50000.00,
       "token": "USDT"
@@ -449,7 +451,7 @@
   "vasp_candidates": [
     {
       "rank": 1,
-      "address": "TWazirXdeposit1234567890123456",
+      "address": "TNgEDH3RhWAWm7yBDmJgwWBZiGkjEnFaK7",
       "label": "WazirX",
       "label_source": "public",
       "confidence": 0.92,
@@ -469,8 +471,8 @@
           "hops": [
             {
               "step": 1,
-              "from": "TN2YqTv7ykawJjgqQfcbRGFyEY8ehPkuGM",
-              "to": "TLayerA1qwerty123456789012345678",
+              "from": "TFNyk1vSQ82XBvvboW7mLBtneeDToVt1KW",
+              "to": "TNMKZSJx7g5Ryv91BXgv2q56VRQwi1ozue",
               "amount": 49500.0,
               "token": "USDT",
               "tx_hash": "aaa1110000000000000000000000000000000000000000000000000000000001",
@@ -478,8 +480,8 @@
             },
             {
               "step": 2,
-              "from": "TLayerA1qwerty123456789012345678",
-              "to": "TWazirXdeposit1234567890123456",
+              "from": "TNMKZSJx7g5Ryv91BXgv2q56VRQwi1ozue",
+              "to": "TNgEDH3RhWAWm7yBDmJgwWBZiGkjEnFaK7",
               "amount": 48000.0,
               "token": "USDT",
               "tx_hash": "bbb2220000000000000000000000000000000000000000000000000000000002",
@@ -531,7 +533,7 @@
   "labels": [
     {
       "id": 1,
-      "address": "TWazirXdeposit1234567890123456",
+      "address": "TNgEDH3RhWAWm7yBDmJgwWBZiGkjEnFaK7",
       "chain": "TRON",
       "label": "WazirX",
       "label_type": "exchange",
@@ -547,7 +549,7 @@
 - **Request Body:**
 ```json
 {
-  "address": "TManualLabel12345678901234567890",
+  "address": "TBtV54voN61JLYi1qR1NN3ynxSMJS44QWN",
   "chain": "TRON",
   "label": "CoinDCX Deposit",
   "label_type": "exchange",

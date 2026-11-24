@@ -221,8 +221,8 @@ tx.amount = 600.0 USDT → KEPT
 
 | Parameter | Type | Default | Min | Max | Source |
 |---|---|---|---|---|---|
-| `trace_config.time_window_before_days` | `int` | `30` | `1` | `90` | Per-case config |
-| `trace_config.time_window_after_days` | `int` | `7` | `0` | `30` | Per-case config |
+| `trace_config.time_window_before_days` | `int` | `30` | `1` | `365` | Per-case config |
+| `trace_config.time_window_after_days` | `int` | `7` | `0` | `90` | Per-case config |
 | `complaint.reported_at` | `datetime` (UTC) | — | — | — | Complaint record |
 
 **Rule:**
@@ -310,7 +310,7 @@ if hop == 1:
 # `outgoing_tx` = the candidate transaction leaving this address (current hop)
 
 if not (incoming_tx.timestamp <= outgoing_tx.timestamp <= incoming_tx.timestamp + timedelta(hours=72)):
-    mark pruned, reason = "path_continuity"
+    mark pruned, reason = "path_discontinuity"
 ```
 
 **Multiple incoming transactions:**
@@ -324,10 +324,10 @@ valid_window_start = earliest_incoming
 valid_window_end   = latest_incoming + timedelta(hours=72)
 
 if not (valid_window_start <= outgoing_tx.timestamp <= valid_window_end):
-    mark pruned, reason = "path_continuity"
+    mark pruned, reason = "path_discontinuity"
 ```
 
-**`pruned_reason` value:** `"path_continuity"`
+**`pruned_reason` value:** `"path_discontinuity"`
 
 ---
 
@@ -345,10 +345,10 @@ The same `tx_hash` can appear in multiple BFS paths if two paths converge at the
 if tx_hash already exists as a kept (pruned=FALSE) edge in the graph:
     # Keep it in the SHORTEST path (lowest hop level)
     if existing_edge.hop <= current_hop:
-        mark current occurrence pruned, reason = "duplicate_tx"
+        mark current occurrence pruned, reason = "duplicate"
     else:
         # Current path is shorter — swap: prune the old one, keep this one
-        mark existing occurrence pruned, reason = "duplicate_tx"
+        mark existing occurrence pruned, reason = "duplicate"
         add current occurrence as kept
 ```
 
@@ -364,15 +364,15 @@ if to_address already in global_visited at same hop:
     
     if current_path_amount > existing_path_amount:
         # Replace: prune old path's final edge, keep current
-        mark old edge pruned, reason = "duplicate_path"
+        mark old edge pruned, reason = "duplicate"
         keep current edge
     else:
-        mark current edge pruned, reason = "duplicate_path"
+        mark current edge pruned, reason = "duplicate"
 ```
 
 **Implementation note:** For MVP, the "total path amount" is approximated by looking only at the **edge amount** arriving at the address (not the full path sum), since tracking full path sums in BFS requires additional bookkeeping. This is acceptable because the highest single-edge amount is a reasonable proxy for the most significant flow.
 
-**`pruned_reason` values:** `"duplicate_tx"` or `"duplicate_path"`
+**`pruned_reason` values:** `"duplicate"` or `"duplicate"`
 
 ---
 
@@ -749,9 +749,8 @@ Stored in `cases.trace_metadata` (JSONB column) after trace completion.
     "amount_relevance": 87,
     "time_window": 42,
     "degree_cap": 55,
-    "path_continuity": 31,
-    "duplicate_tx": 8,
-    "duplicate_path": 6
+    "path_discontinuity": 31,
+    "duplicate": 14
   },
   "nodes_count": 47,
   "edges_count": 83,
@@ -782,7 +781,7 @@ The graph engine provides a method to serialize the pruned graph (kept edges onl
     "nodes": [
       {
         "data": {
-          "id": "TXrZ9B1234567890123456789012345678",
+          "id": "TL6NsnvPg3N7QxaLsBvHCEaBiSYrqiDNws",
           "label": "TXrZ...5678",
           "type": "seed",
           "hop": 0,
@@ -796,7 +795,7 @@ The graph engine provides a method to serialize the pruned graph (kept edges onl
       },
       {
         "data": {
-          "id": "TAbC121234567890123456789012345678",
+          "id": "TQpoianDcskU3tei8gxhJzJhN1ZKz75SZ1",
           "label": "TAbC...5678",
           "type": "intermediate",
           "hop": 1,
@@ -810,7 +809,7 @@ The graph engine provides a method to serialize the pruned graph (kept edges onl
       },
       {
         "data": {
-          "id": "THotW1234567890123456789012345678X",
+          "id": "TVKGjmUx73nc4EX1pNg8c3AnN8vSZqGgnU",
           "label": "THot...678X",
           "type": "vasp_candidate",
           "hop": 2,
@@ -827,8 +826,8 @@ The graph engine provides a method to serialize the pruned graph (kept edges onl
       {
         "data": {
           "id": "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2",
-          "source": "TXrZ9B1234567890123456789012345678",
-          "target": "TAbC121234567890123456789012345678",
+          "source": "TL6NsnvPg3N7QxaLsBvHCEaBiSYrqiDNws",
+          "target": "TQpoianDcskU3tei8gxhJzJhN1ZKz75SZ1",
           "amount": 20000.0,
           "token": "USDT",
           "timestamp": "2026-10-16T14:22:00Z",
@@ -839,8 +838,8 @@ The graph engine provides a method to serialize the pruned graph (kept edges onl
       {
         "data": {
           "id": "b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3",
-          "source": "TAbC121234567890123456789012345678",
-          "target": "THotW1234567890123456789012345678X",
+          "source": "TQpoianDcskU3tei8gxhJzJhN1ZKz75SZ1",
+          "target": "TVKGjmUx73nc4EX1pNg8c3AnN8vSZqGgnU",
           "amount": 15000.0,
           "token": "USDT",
           "timestamp": "2026-10-16T15:03:00Z",
@@ -906,8 +905,8 @@ TRX_USDT_FALLBACK_RATE = Decimal("0.10")
 @dataclass
 class TraceConfig:
     hop_limit: int = 3                    # 1–5
-    time_window_before_days: int = 30     # 1–90
-    time_window_after_days: int = 7       # 0–30
+    time_window_before_days: int = 30     # 1–365
+    time_window_after_days: int = 7       # 0–90
     degree_cap: int = 100                 # 10–1000
 
 
@@ -925,8 +924,7 @@ class TraceContext:
     fetch_failures: int = 0
     pruning_counts: dict[str, int] = field(default_factory=lambda: {
         "hop_limit": 0, "amount_relevance": 0, "time_window": 0,
-        "degree_cap": 0, "path_continuity": 0, "duplicate_tx": 0,
-        "duplicate_path": 0
+        "degree_cap": 0, "path_discontinuity": 0, "duplicate": 0
     })
     cycles: list[dict] = field(default_factory=list)
     degree_capped_addrs: list[str] = field(default_factory=list)
@@ -965,8 +963,8 @@ async def run_trace(case_id: str, db: Database) -> TraceResult:
 
     # Clamp config values
     config.hop_limit = clamp(config.hop_limit, 1, 5)
-    config.time_window_before_days = clamp(config.time_window_before_days, 1, 90)
-    config.time_window_after_days = clamp(config.time_window_after_days, 0, 30)
+    config.time_window_before_days = clamp(config.time_window_before_days, 1, 365)
+    config.time_window_after_days = clamp(config.time_window_after_days, 0, 90)
     config.degree_cap = clamp(config.degree_cap, 10, 1000)
 
     # Compute time window
@@ -1158,8 +1156,8 @@ async def run_trace(case_id: str, db: Database) -> TraceResult:
                         cont_end = latest_in + timedelta(hours=PATH_CONTINUITY_HOURS)
                         if not (cont_start <= edge_data["timestamp"] <= cont_end):
                             pruned = True
-                            pruned_reason = "path_continuity"
-                            ctx.pruning_counts["path_continuity"] += 1
+                            pruned_reason = "path_discontinuity"
+                            ctx.pruning_counts["path_discontinuity"] += 1
 
                 # FILTER 6: Duplicate Removal
                 if not pruned:
@@ -1169,11 +1167,11 @@ async def run_trace(case_id: str, db: Database) -> TraceResult:
                         if existing_hop <= current_hop:
                             # Existing is at same or shorter path — prune current
                             pruned = True
-                            pruned_reason = "duplicate_tx"
-                            ctx.pruning_counts["duplicate_tx"] += 1
+                            pruned_reason = "duplicate"
+                            ctx.pruning_counts["duplicate"] += 1
                         else:
                             # Current path is shorter — prune old, keep new
-                            await db.mark_edge_pruned(ctx.case_id, tx_hash, "duplicate_tx")
+                            await db.mark_edge_pruned(ctx.case_id, tx_hash, "duplicate")
                             ctx.kept_tx_hashes[tx_hash] = current_hop
                             # (Don't set pruned — this one is kept)
 
@@ -1190,15 +1188,15 @@ async def run_trace(case_id: str, db: Database) -> TraceResult:
                                 best_existing_amount = max(e[2]["amount"] for e in existing_edges)
                                 if edge_data["amount"] <= best_existing_amount:
                                     pruned = True
-                                    pruned_reason = "duplicate_path"
-                                    ctx.pruning_counts["duplicate_path"] += 1
+                                    pruned_reason = "duplicate"
+                                    ctx.pruning_counts["duplicate"] += 1
                                 else:
                                     # Current edge has higher amount — prune old
                                     for e in existing_edges:
                                         ctx.graph.edges[e[0], e[1]]["pruned"] = True
-                                        ctx.graph.edges[e[0], e[1]]["pruned_reason"] = "duplicate_path"
-                                        await db.mark_edge_pruned(ctx.case_id, e[2]["tx_hash"], "duplicate_path")
-                                    ctx.pruning_counts["duplicate_path"] += len(existing_edges)
+                                        ctx.graph.edges[e[0], e[1]]["pruned_reason"] = "duplicate"
+                                        await db.mark_edge_pruned(ctx.case_id, e[2]["tx_hash"], "duplicate")
+                                    ctx.pruning_counts["duplicate"] += len(existing_edges)
 
                 # --- Record edge ---
                 edge_data["pruned"] = pruned
@@ -1506,8 +1504,8 @@ class TraceResult:
 @dataclass
 class TraceConfig:
     hop_limit: int             # Range: 1–5, Default: 3
-    time_window_before_days: int  # Range: 1–90, Default: 30
-    time_window_after_days: int   # Range: 0–30, Default: 7
+    time_window_before_days: int  # Range: 1–365, Default: 30
+    time_window_after_days: int   # Range: 0–90, Default: 7
     degree_cap: int            # Range: 10–1000, Default: 100
 ```
 
@@ -1520,8 +1518,8 @@ All configuration values in one table for quick reference:
 | Parameter | Location | Type | Default | Min | Max | Hardcoded? |
 |---|---|---|---|---|---|---|
 | `hop_limit` | `trace_config` JSONB | `int` | `3` | `1` | `5` | No |
-| `time_window_before_days` | `trace_config` JSONB | `int` | `30` | `1` | `90` | No |
-| `time_window_after_days` | `trace_config` JSONB | `int` | `7` | `0` | `30` | No |
+| `time_window_before_days` | `trace_config` JSONB | `int` | `30` | `1` | `365` | No |
+| `time_window_after_days` | `trace_config` JSONB | `int` | `7` | `0` | `90` | No |
 | `degree_cap` | `trace_config` JSONB | `int` | `100` | `10` | `1000` | No |
 | Amount relevance % | Constant | `Decimal` | `0.01` | — | — | Yes |
 | Amount absolute min | Constant | `Decimal` | `10.0` USDT | — | — | Yes |
@@ -1544,7 +1542,7 @@ All configuration values in one table for quick reference:
 
 ### Scenario
 
-- **Complaint:** Victim reports losing **50,000 USDT** to address `TSeed111111111111111111111111111A`
+- **Complaint:** Victim reports losing **50,000 USDT** to address `TNpS8xYnzLSm1XgKMs5HYv8zFHXPWgGqHF`
 - **Reported at:** `2026-10-20T00:00:00Z`
 - **Config:** `hop_limit=3`, `degree_cap=100`, defaults for everything else
 
@@ -1586,7 +1584,7 @@ HOP 2: Fetch outgoing for each frontier address
   TAddr...F: 1 outgoing transaction
     tx10: TAddr...F → TAddr...J, 4000 USDT, 2026-10-25T10:00Z
          Path continuity: incoming tx5 at 10:20 Oct 18, outgoing at 10:00 Oct 25
-         Difference = ~6.98 days = 167.7 hours > 72h → PRUNED (path_continuity)
+         Difference = ~6.98 days = 167.7 hours > 72h → PRUNED (path_discontinuity)
 
   Frontier for hop 3: [TAddr...G, TAddr...H, TAddr...I]
 
@@ -1609,7 +1607,7 @@ BFS COMPLETE.
 ```
 Nodes: 10 (1 seed + 7 intermediate + 1 vasp_candidate[degree_capped] + 1 vasp_candidate[Binance])
 Kept edges: 8 (tx1, tx2, tx3, tx5, tx6, tx7, tx8, tx11) + 2 cycle edges (tx9, tx12)
-Pruned edges: 152 (1 amount + 150 degree_cap + 1 path_continuity)
+Pruned edges: 152 (1 amount + 150 degree_cap + 1 path_discontinuity)
 Cycles detected: 2
 Fetch failures: 0
 ```

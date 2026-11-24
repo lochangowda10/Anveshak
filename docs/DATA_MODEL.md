@@ -790,7 +790,7 @@ Migrations MUST be applied in this dependency order:
 ## 7. Seed Data — Known VASP Labels
 
 > [!CAUTION]
-> These addresses are **representative examples for development and testing only**. In production, real addresses MUST be sourced from licensed threat-intel providers and agency intelligence. The addresses below are drawn from publicly documented exchange hot-wallet addresses on the TRON network.
+> **MVP Seed Placeholders Only (Unverified Attribution):** All 20 addresses below are Base58Check-valid TRON addresses **for development, testing, and hackathon demo use only**. Their real-world exchange attribution is **unverified**. Before issuing any real-world law-enforcement notice, labels MUST be verified against official agency intelligence or licensed threat-intel feeds.
 
 ```sql
 INSERT INTO vasp_labels (address, chain, label, label_type, source, confidence, metadata)
@@ -802,7 +802,7 @@ VALUES
     ('TYASr5UV6HEcXatwdFQfmLVUqQQQMUxHLS', 'TRON', 'WazirX Hot Wallet 2', 'exchange', 'public', 0.90,
      '{"country": "IN", "kyc_required": true, "regulated_by": "FIU-IND", "wallet_type": "hot"}'),
 
-    ('TCYo7Q2YnDdGpc8pBDdqjCNnpXg1cBDPMR', 'TRON', 'CoinDCX', 'exchange', 'public', 0.90,
+    ('TEYdEkREveGbAch4kEHrHt6wTJtv8wLTCB', 'TRON', 'CoinDCX', 'exchange', 'public', 0.90,
      '{"country": "IN", "kyc_required": true, "regulated_by": "FIU-IND"}'),
 
     ('TQrY8tryqsYVCYS3MFbtffiPp2ccyn4STm', 'TRON', 'ZebPay', 'exchange', 'public', 0.85,
@@ -827,27 +827,27 @@ VALUES
     ('TYDzsYUEpvnYmQk4zGP9sWWcTEd2MiAtW6', 'TRON', 'OKX', 'exchange', 'public', 0.92,
      '{"country": "SC", "kyc_required": true, "cooperation_rating": "high"}'),
 
-    ('TRGCqMrMBvMGaEHWjC9JhiEkbGEUTN5LNU', 'TRON', 'Bybit', 'exchange', 'public', 0.88,
+    ('TKR4ASwnYZSpNZJ3eYBSsWg6qX2siBi7nW', 'TRON', 'Bybit', 'exchange', 'public', 0.88,
      '{"country": "AE", "kyc_required": true, "cooperation_rating": "medium"}'),
 
     ('TKcEU8ekq2ZoFzLSGFYCUY6aocJBX9X31b', 'TRON', 'Gate.io', 'exchange', 'public', 0.85,
      '{"country": "KY", "kyc_required": true, "cooperation_rating": "low"}'),
 
-    ('TBPxHHMqJBLhMjMrLoFe3pKB27M9kACydW', 'TRON', 'Bitget', 'exchange', 'public', 0.85,
+    ('TB7jyEwTretwFtDuiiemfDL28k759LCKjC', 'TRON', 'Bitget', 'exchange', 'public', 0.85,
      '{"country": "SC", "kyc_required": true, "cooperation_rating": "medium"}'),
 
     ('TGjYzgCyPobsNS9n6WcbdLVR9dH7mWqFx7', 'TRON', 'MEXC', 'exchange', 'public', 0.82,
      '{"country": "SC", "kyc_required": true, "cooperation_rating": "low"}'),
 
-    ('TXDm3FXLA5pjhKe9MXjzMgFkqkXEYR1QwN', 'TRON', 'CoinSwitch Kuber', 'exchange', 'public', 0.88,
+    ('TEX1P1wGhGRCqwkEe3Bg5tjxpWFhrRUsjk', 'TRON', 'CoinSwitch Kuber', 'exchange', 'public', 0.88,
      '{"country": "IN", "kyc_required": true, "regulated_by": "FIU-IND"}'),
 
     -- Mixers / High-Risk Services
-    ('TSvT3YbZPFhF5xgRm2CVSapJo88GCn1R18', 'TRON', 'Tornado Cash (TRON)', 'mixer', 'public', 0.70,
+    ('THsBezkfmAiBXYMhEFFGCwgT9U7vMPpKvj', 'TRON', 'Tornado Cash (TRON)', 'mixer', 'public', 0.70,
      '{"sanctioned": true, "ofac_listed": true, "risk_level": "critical"}'),
 
     -- Bridges
-    ('TKLDMBfgDhairyBM8LD2cXr3GpXYpu5CRXH', 'TRON', 'JustCryptos Bridge', 'bridge', 'heuristic', 0.60,
+    ('TNiTXoBBzxzNUuQHHK6KNjb3uxTVFuhw1V', 'TRON', 'JustCryptos Bridge', 'bridge', 'heuristic', 0.60,
      '{"cross_chain": ["ETH", "BSC"], "risk_level": "high"}'),
 
     -- DeFi
@@ -855,251 +855,20 @@ VALUES
      '{"protocol": "SunSwap", "version": "v2", "type": "dex_router"}'),
 
     -- Gambling
-    ('TFSr6fqFBBVLWC1HuaM7YX5hRNFBKMvH5a', 'TRON', 'WINk Casino', 'gambling', 'public', 0.80,
+    ('TYuiexQRZFqp9ov86vyfVqLVeXxwqS7v5W', 'TRON', 'WINk Casino', 'gambling', 'public', 0.80,
      '{"risk_level": "high", "category": "online_gambling"}'),
 
-    ('TPQLqAh4os9pm4cxTWcGJA4pHMEQ3D4z4i', 'TRON', 'Unknown Gambling Platform', 'gambling', 'heuristic', 0.55,
+    ('TRQKRgXWUcBmxqqWPtABM6oSmJiQzXtQEg', 'TRON', 'Unknown Gambling Platform', 'gambling', 'heuristic', 0.55,
      '{"risk_level": "high", "identified_via": "pattern_analysis"}')
 ON CONFLICT (address, chain, source) DO NOTHING;
 ```
 
 ---
 
-## 8. Consolidated DDL Script
+## 8. Consolidated DDL Reference
 
-> [!TIP]
-> Run this script on a fresh database to create all tables, indexes, constraints, triggers, and seed data in a single pass.
-
-```sql
--- =============================================================
--- ANVESHAK — Full Schema DDL
--- Database: PostgreSQL 15+
--- Generated: 2026-11-24
--- =============================================================
-
--- Extensions
-CREATE EXTENSION IF NOT EXISTS "pgcrypto";
-
--- Trigger function
-CREATE OR REPLACE FUNCTION set_updated_at()
-RETURNS TRIGGER AS $$
-BEGIN
-    NEW.updated_at = NOW();
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
--- ===================== cases =====================
-CREATE TABLE cases (
-    id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    complaint_id        VARCHAR(50) UNIQUE,
-    victim_name         VARCHAR(255) NOT NULL,
-    victim_contact      VARCHAR(255),
-    description         TEXT NOT NULL,
-    status              VARCHAR(20) NOT NULL DEFAULT 'PENDING'
-                            CHECK (status IN (
-                                'PENDING','TRACING','TRACED','ANALYZED',
-                                'EXPORTED','CLOSED','TRACE_FAILED','ANALYSIS_FAILED'
-                            )),
-    reported_at         TIMESTAMPTZ NOT NULL,
-    created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    trace_started_at    TIMESTAMPTZ,
-    trace_completed_at  TIMESTAMPTZ,
-    trace_config        JSONB
-);
-CREATE INDEX ix_cases_status     ON cases (status);
-CREATE INDEX ix_cases_created_at ON cases (created_at DESC);
-CREATE TRIGGER trg_cases_updated_at
-    BEFORE UPDATE ON cases FOR EACH ROW EXECUTE FUNCTION set_updated_at();
-
--- ===================== case_tags =====================
-CREATE TABLE case_tags (
-    id       SERIAL PRIMARY KEY,
-    case_id  UUID NOT NULL REFERENCES cases(id) ON DELETE CASCADE,
-    tag      VARCHAR(50) NOT NULL,
-    UNIQUE (case_id, tag)
-);
-CREATE INDEX ix_case_tags_case_id ON case_tags (case_id);
-
--- ===================== seed_wallets =====================
-CREATE TABLE seed_wallets (
-    id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    case_id          UUID NOT NULL REFERENCES cases(id) ON DELETE CASCADE,
-    address          VARCHAR(100) NOT NULL,
-    chain            VARCHAR(10) NOT NULL DEFAULT 'TRON'
-                         CHECK (chain IN ('TRON','ETH','BTC')),
-    token            VARCHAR(20) NOT NULL DEFAULT 'USDT',
-    reported_amount  DECIMAL(28,8),
-    tx_hash          VARCHAR(100),
-    created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-CREATE INDEX ix_seed_wallets_case_id ON seed_wallets (case_id);
-CREATE INDEX ix_seed_wallets_address ON seed_wallets (address);
-
--- ===================== transactions =====================
-CREATE TABLE transactions (
-    id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    tx_hash       VARCHAR(100) NOT NULL,
-    block_number  BIGINT NOT NULL,
-    timestamp     TIMESTAMPTZ NOT NULL,
-    from_address  VARCHAR(100) NOT NULL,
-    to_address    VARCHAR(100) NOT NULL,
-    amount        DECIMAL(28,8) NOT NULL,
-    token         VARCHAR(20) NOT NULL,
-    chain         VARCHAR(10) NOT NULL,
-    raw_data      JSONB NOT NULL,
-    fetched_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    UNIQUE (tx_hash, chain)
-);
-CREATE INDEX ix_transactions_from_address ON transactions (from_address);
-CREATE INDEX ix_transactions_to_address   ON transactions (to_address);
-CREATE INDEX ix_transactions_timestamp    ON transactions (timestamp);
-
--- ===================== trace_edges =====================
-CREATE TABLE trace_edges (
-    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    case_id         UUID NOT NULL REFERENCES cases(id) ON DELETE CASCADE,
-    transaction_id  UUID NOT NULL REFERENCES transactions(id),
-    from_address    VARCHAR(100) NOT NULL,
-    to_address      VARCHAR(100) NOT NULL,
-    amount          DECIMAL(28,8) NOT NULL,
-    token           VARCHAR(20) NOT NULL,
-    timestamp       TIMESTAMPTZ NOT NULL,
-    hop_depth       SMALLINT NOT NULL,
-    path_id         VARCHAR(100) NOT NULL,
-    pruned          BOOLEAN NOT NULL DEFAULT FALSE,
-    prune_reason    VARCHAR(50)
-                        CHECK (prune_reason IS NULL OR prune_reason IN (
-                            'hop_limit','amount_below_threshold','time_window',
-                            'degree_cap','path_discontinuity','duplicate'
-                        ))
-);
-CREATE INDEX ix_trace_edges_case_id     ON trace_edges (case_id);
-CREATE INDEX ix_trace_edges_case_pruned ON trace_edges (case_id, pruned);
-
--- ===================== trace_nodes =====================
-CREATE TABLE trace_nodes (
-    id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    case_id        UUID NOT NULL REFERENCES cases(id) ON DELETE CASCADE,
-    address        VARCHAR(100) NOT NULL,
-    chain          VARCHAR(10) NOT NULL,
-    node_type      VARCHAR(20) NOT NULL DEFAULT 'unknown'
-                       CHECK (node_type IN ('seed','intermediate','vasp_candidate','unknown')),
-    hop_depth      SMALLINT NOT NULL,
-    in_degree      INTEGER NOT NULL DEFAULT 0,
-    out_degree     INTEGER NOT NULL DEFAULT 0,
-    total_received DECIMAL(28,8) NOT NULL DEFAULT 0,
-    total_sent     DECIMAL(28,8) NOT NULL DEFAULT 0,
-    first_seen     TIMESTAMPTZ NOT NULL,
-    last_seen      TIMESTAMPTZ NOT NULL,
-    UNIQUE (case_id, address)
-);
-CREATE INDEX ix_trace_nodes_case_id   ON trace_nodes (case_id);
-CREATE INDEX ix_trace_nodes_node_type ON trace_nodes (node_type);
-
--- ===================== vasp_labels =====================
-CREATE TABLE vasp_labels (
-    id          SERIAL PRIMARY KEY,
-    address     VARCHAR(100) NOT NULL,
-    chain       VARCHAR(10) NOT NULL DEFAULT 'TRON',
-    label       VARCHAR(255) NOT NULL,
-    label_type  VARCHAR(20) NOT NULL
-                    CHECK (label_type IN (
-                        'exchange','mixer','bridge','defi','gambling','unknown'
-                    )),
-    source      VARCHAR(20) NOT NULL
-                    CHECK (source IN ('public','agency','licensed','heuristic')),
-    confidence  DECIMAL(3,2) NOT NULL DEFAULT 0.50
-                    CHECK (confidence >= 0 AND confidence <= 1),
-    metadata    JSONB,
-    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    UNIQUE (address, chain, source)
-);
-CREATE INDEX ix_vasp_labels_address ON vasp_labels (address);
-CREATE INDEX ix_vasp_labels_label   ON vasp_labels (label);
-CREATE TRIGGER trg_vasp_labels_updated_at
-    BEFORE UPDATE ON vasp_labels FOR EACH ROW EXECUTE FUNCTION set_updated_at();
-
--- ===================== vasp_candidates =====================
-CREATE TABLE vasp_candidates (
-    id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    case_id             UUID NOT NULL REFERENCES cases(id) ON DELETE CASCADE,
-    address             VARCHAR(100) NOT NULL,
-    chain               VARCHAR(10) NOT NULL,
-    rank                SMALLINT NOT NULL,
-    label               VARCHAR(255),
-    label_source        VARCHAR(20),
-    confidence          DECIMAL(3,2) NOT NULL,
-    scoring_breakdown   JSONB NOT NULL,
-    evidence_path_ids   TEXT[] NOT NULL,
-    review_status       VARCHAR(20) NOT NULL DEFAULT 'pending'
-                            CHECK (review_status IN ('pending','accepted','rejected')),
-    review_notes        TEXT,
-    created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    UNIQUE (case_id, address)
-);
-CREATE INDEX ix_vasp_candidates_case_id ON vasp_candidates (case_id);
-
--- ===================== action_packages =====================
-CREATE TABLE action_packages (
-    id                   UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    case_id              UUID NOT NULL REFERENCES cases(id) ON DELETE CASCADE,
-    generated_at         TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    summary              JSONB NOT NULL,
-    recommended_actions  TEXT[] NOT NULL,
-    legal_references     TEXT[] NOT NULL,
-    pdf_path             VARCHAR(500),
-    json_data            JSONB NOT NULL,
-    UNIQUE (case_id)
-);
-
--- ===================== Seed Data =====================
-INSERT INTO vasp_labels (address, chain, label, label_type, source, confidence, metadata)
-VALUES
-    ('TLa2f6VPqDgRE67v1736s7bJ8Ray5wYjU7', 'TRON', 'WazirX', 'exchange', 'public', 0.95,
-     '{"country": "IN", "kyc_required": true, "regulated_by": "FIU-IND"}'),
-    ('TYASr5UV6HEcXatwdFQfmLVUqQQQMUxHLS', 'TRON', 'WazirX Hot Wallet 2', 'exchange', 'public', 0.90,
-     '{"country": "IN", "kyc_required": true, "regulated_by": "FIU-IND", "wallet_type": "hot"}'),
-    ('TCYo7Q2YnDdGpc8pBDdqjCNnpXg1cBDPMR', 'TRON', 'CoinDCX', 'exchange', 'public', 0.90,
-     '{"country": "IN", "kyc_required": true, "regulated_by": "FIU-IND"}'),
-    ('TQrY8tryqsYVCYS3MFbtffiPp2ccyn4STm', 'TRON', 'ZebPay', 'exchange', 'public', 0.85,
-     '{"country": "IN", "kyc_required": true, "regulated_by": "FIU-IND"}'),
-    ('TNaRAoLUyYEV2uF7GUrzSjRQTU8v5ZJ5VR', 'TRON', 'Binance', 'exchange', 'public', 0.95,
-     '{"country": "GLOBAL", "kyc_required": true, "cooperation_rating": "high"}'),
-    ('TKzxdSv2FZKQrEqkKVgp5DcwEXBEKMg2Ax', 'TRON', 'Binance Hot Wallet 2', 'exchange', 'public', 0.95,
-     '{"country": "GLOBAL", "kyc_required": true, "wallet_type": "hot"}'),
-    ('TWd4WrZ9wn84f5x1hZhL4DHvk738ns5jwb', 'TRON', 'Binance Cold Wallet', 'exchange', 'public', 0.95,
-     '{"country": "GLOBAL", "kyc_required": true, "wallet_type": "cold"}'),
-    ('TDqSquXBgUCLYvYC4XZgrprLK589dkhSCf', 'TRON', 'KuCoin', 'exchange', 'public', 0.90,
-     '{"country": "SC", "kyc_required": true, "cooperation_rating": "medium"}'),
-    ('TAzsQ9Gx8eqFNFSKbeXrbi45CuVPHzA8wr', 'TRON', 'Huobi (HTX)', 'exchange', 'public', 0.90,
-     '{"country": "SC", "kyc_required": true, "cooperation_rating": "medium"}'),
-    ('TYDzsYUEpvnYmQk4zGP9sWWcTEd2MiAtW6', 'TRON', 'OKX', 'exchange', 'public', 0.92,
-     '{"country": "SC", "kyc_required": true, "cooperation_rating": "high"}'),
-    ('TRGCqMrMBvMGaEHWjC9JhiEkbGEUTN5LNU', 'TRON', 'Bybit', 'exchange', 'public', 0.88,
-     '{"country": "AE", "kyc_required": true, "cooperation_rating": "medium"}'),
-    ('TKcEU8ekq2ZoFzLSGFYCUY6aocJBX9X31b', 'TRON', 'Gate.io', 'exchange', 'public', 0.85,
-     '{"country": "KY", "kyc_required": true, "cooperation_rating": "low"}'),
-    ('TBPxHHMqJBLhMjMrLoFe3pKB27M9kACydW', 'TRON', 'Bitget', 'exchange', 'public', 0.85,
-     '{"country": "SC", "kyc_required": true, "cooperation_rating": "medium"}'),
-    ('TGjYzgCyPobsNS9n6WcbdLVR9dH7mWqFx7', 'TRON', 'MEXC', 'exchange', 'public', 0.82,
-     '{"country": "SC", "kyc_required": true, "cooperation_rating": "low"}'),
-    ('TXDm3FXLA5pjhKe9MXjzMgFkqkXEYR1QwN', 'TRON', 'CoinSwitch Kuber', 'exchange', 'public', 0.88,
-     '{"country": "IN", "kyc_required": true, "regulated_by": "FIU-IND"}'),
-    ('TSvT3YbZPFhF5xgRm2CVSapJo88GCn1R18', 'TRON', 'Tornado Cash (TRON)', 'mixer', 'public', 0.70,
-     '{"sanctioned": true, "ofac_listed": true, "risk_level": "critical"}'),
-    ('TKLDMBfgDhairyBM8LD2cXr3GpXYpu5CRXH', 'TRON', 'JustCryptos Bridge', 'bridge', 'heuristic', 0.60,
-     '{"cross_chain": ["ETH", "BSC"], "risk_level": "high"}'),
-    ('TXk8rQSAvPvBBNtqSoY6nCfsXWCSSpTVQF', 'TRON', 'SunSwap V2 Router', 'defi', 'public', 0.95,
-     '{"protocol": "SunSwap", "version": "v2", "type": "dex_router"}'),
-    ('TFSr6fqFBBVLWC1HuaM7YX5hRNFBKMvH5a', 'TRON', 'WINk Casino', 'gambling', 'public', 0.80,
-     '{"risk_level": "high", "category": "online_gambling"}'),
-    ('TPQLqAh4os9pm4cxTWcGJA4pHMEQ3D4z4i', 'TRON', 'Unknown Gambling Platform', 'gambling', 'heuristic', 0.55,
-     '{"risk_level": "high", "identified_via": "pattern_analysis"}')
-ON CONFLICT (address, chain, source) DO NOTHING;
-```
+> [!NOTE]
+> Section 3 above is the **single authoritative DDL** for all 9 tables (plus `set_updated_at()` in Section 2), and Section 7 contains the idempotent seed `INSERT` statements. No duplicate DDL block is maintained here to prevent schema drift.
 
 ---
 

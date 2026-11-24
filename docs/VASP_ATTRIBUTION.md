@@ -262,6 +262,12 @@ def time_gap_score(time_gap_hours: float) -> float:
 **Range:** `[0.0, 1.0]` \
 **Input:** `time_gap_hours` = `(candidate_first_inbound_ts - seed_tx_ts).total_seconds() / 3600.0`
 
+**`seed_tx_ts` Fallback Rule (when `seed_wallets.tx_hash` is `NULL`):**
+1. If `seed_wallets.tx_hash` is provided and found in `transactions`, use that transaction's `timestamp`.
+2. Otherwise, use the **earliest outgoing transaction timestamp** from the seed wallet within the trace window.
+3. If the seed wallet has no outgoing transactions, fall back to `cases.reported_at`.
+If `time_gap_hours < 0` (edge timestamp precedes fallback timestamp), clamp `time_gap_hours = 0.0`.
+
 #### 3.3.5 `path_continuity_score`
 
 ```python
@@ -313,7 +319,7 @@ def degree_fanout_score(in_degree: int) -> float:
 ### 3.4 Worked Example
 
 **Scenario:** Victim reports loss of 50,000 USDT. Trace finds address
-`TWd2Z3hLqreUFMFgB7US8gkz5FHxSGpNqd` at hop 2, which received 35,000 USDT,
+`THb8E3EMsC9xU6bMNWQsr83dFfBEDSfXGg` at hop 2, which received 35,000 USDT,
 has an exact label match for "WazirX", time gap of 4 hours, 3/3 continuous
 edges, and in-degree of 60.
 
@@ -424,7 +430,7 @@ class ScoringBreakdown:
   "candidates": [
     {
       "rank": 1,
-      "address": "TWd2Z3hLqreUFMFgB7US8gkz5FHxSGpNqd",
+      "address": "THb8E3EMsC9xU6bMNWQsr83dFfBEDSfXGg",
       "chain": "TRON",
       "label": "WazirX",
       "label_source": "public",
@@ -548,7 +554,7 @@ The investigating officer can perform three actions on each VASP candidate:
 
 ```json
 {
-  "address": "TWd2Z3hLqreUFMFgB7US8gkz5FHxSGpNqd",
+  "address": "THb8E3EMsC9xU6bMNWQsr83dFfBEDSfXGg",
   "review_status": "accepted",
   "reviewed_by": "officer_12345",
   "reviewed_at": "2026-11-24T17:30:00Z",
@@ -637,7 +643,7 @@ CREATE INDEX idx_vasp_labels_source ON vasp_labels(source);
 VASP_SEED_DATA: list[dict] = [
     # ─── Indian Exchanges ───────────────────────────────────────────────
     {
-        "address": "TWd2Z3hLqreUFMFgB7US8gkz5FHxSGpNqd",
+        "address": "THb8E3EMsC9xU6bMNWQsr83dFfBEDSfXGg",
         "chain": "TRON",
         "label_name": "WazirX",
         "vasp_type": "exchange",
@@ -649,7 +655,7 @@ VASP_SEED_DATA: list[dict] = [
         "added_by": "system",
     },
     {
-        "address": "TKJYm2mBFTPmcXjdBKMa9zFEbBz3EKXPVN",
+        "address": "TG4321sP6jYt82gT5moUYu7qtGnBH4N6Vz",
         "chain": "TRON",
         "label_name": "WazirX (Deposit)",
         "vasp_type": "exchange",
@@ -673,7 +679,7 @@ VASP_SEED_DATA: list[dict] = [
         "added_by": "system",
     },
     {
-        "address": "TN5WMMHJ8d1J5gVPHgBg6dBpmGh5rYUBse",
+        "address": "TMzrBhURf7uwa1p9kC826PknhjEXdU5zC8",
         "chain": "TRON",
         "label_name": "ZebPay",
         "vasp_type": "exchange",
@@ -685,7 +691,7 @@ VASP_SEED_DATA: list[dict] = [
         "added_by": "system",
     },
     {
-        "address": "TLM2cVijNMjHkWbBHCvqSAQbvGEnWuMjE5",
+        "address": "TJ9Q61Nen6FZdQh7sEArinAyLvyfRpvocd",
         "chain": "TRON",
         "label_name": "Giottus",
         "vasp_type": "exchange",
@@ -697,7 +703,7 @@ VASP_SEED_DATA: list[dict] = [
         "added_by": "system",
     },
     {
-        "address": "TPzKkW3VG3zFuvuFfc4yGLaxsRCdMBgzfH",
+        "address": "TMYuxZNwCoqMaEVxketJnRCGA6G2ydp1dV",
         "chain": "TRON",
         "label_name": "CoinSwitch",
         "vasp_type": "exchange",
@@ -709,7 +715,7 @@ VASP_SEED_DATA: list[dict] = [
         "added_by": "system",
     },
     {
-        "address": "TAoNwU5s3WQXQV4GBLHMrBQ1M3GDqzUPk3",
+        "address": "TSjFVUNnYzQRGVtrxPEm5LNS6Settdn9vN",
         "chain": "TRON",
         "label_name": "BuyUCoin",
         "vasp_type": "exchange",
@@ -721,7 +727,7 @@ VASP_SEED_DATA: list[dict] = [
         "added_by": "system",
     },
     {
-        "address": "TQhiMfkV1GrXXEU4D4fQqbELjMUHeMGosK",
+        "address": "TJPH3e6XJfg8NbSh7tm65sELn6Woqzrexy",
         "chain": "TRON",
         "label_name": "UnoCoin",
         "vasp_type": "exchange",
@@ -758,7 +764,7 @@ VASP_SEED_DATA: list[dict] = [
         "added_by": "system",
     },
     {
-        "address": "TCYo28hFbMZkEuMYwDFaadnAhfEUfzcyKT",
+        "address": "TB3NjmFpXRgSseVDmHZWC39MtSnkRzvfMV",
         "chain": "TRON",
         "label_name": "KuCoin",
         "vasp_type": "exchange",
@@ -770,7 +776,7 @@ VASP_SEED_DATA: list[dict] = [
         "added_by": "system",
     },
     {
-        "address": "TDqiqrmiFAoXBHgRLhPqcX2vSHv1aFqx3T",
+        "address": "TVTEdF8KJiABztaZiJGWqh75EhyNvrMUeS",
         "chain": "TRON",
         "label_name": "Huobi (HTX)",
         "vasp_type": "exchange",
@@ -782,7 +788,7 @@ VASP_SEED_DATA: list[dict] = [
         "added_by": "system",
     },
     {
-        "address": "TLGja6AP1dWqmdVPFPkb2JQdBrYaMF4cVh",
+        "address": "TUEyRcLpE5AuJYctkYVfWWXP7Q4EEQy3mo",
         "chain": "TRON",
         "label_name": "OKX",
         "vasp_type": "exchange",
@@ -794,7 +800,7 @@ VASP_SEED_DATA: list[dict] = [
         "added_by": "system",
     },
     {
-        "address": "TMLMSuyFmJcFMXUMub2NzUFYEfax8sMWRW",
+        "address": "TG3RKdWk2b9UYxetqHjKnnnQY4ywLCYyuF",
         "chain": "TRON",
         "label_name": "Bybit",
         "vasp_type": "exchange",
@@ -806,7 +812,7 @@ VASP_SEED_DATA: list[dict] = [
         "added_by": "system",
     },
     {
-        "address": "TXFBqBbqJommqZf7BV8NHYzePsGcMTtKRm",
+        "address": "TDMENij8USR3G6A6jY7FNHuF6XzKxvK1Zx",
         "chain": "TRON",
         "label_name": "Gate.io",
         "vasp_type": "exchange",
@@ -818,7 +824,7 @@ VASP_SEED_DATA: list[dict] = [
         "added_by": "system",
     },
     {
-        "address": "TVnWByjMPbBEYrczLGQSAQbH42rVnSNFj5",
+        "address": "TLw3LqRiPsxMXYtNJe9fftKCZbLopzBtLT",
         "chain": "TRON",
         "label_name": "MEXC",
         "vasp_type": "exchange",
@@ -830,7 +836,7 @@ VASP_SEED_DATA: list[dict] = [
         "added_by": "system",
     },
     {
-        "address": "TKNGjhR3Hq7DWMkCB8mQrfSKsXBwpxtrTi",
+        "address": "TMJL1XEKKVR5PMe17KKvusrvCfqMdrZB1H",
         "chain": "TRON",
         "label_name": "Bitget",
         "vasp_type": "exchange",
@@ -842,7 +848,7 @@ VASP_SEED_DATA: list[dict] = [
         "added_by": "system",
     },
     {
-        "address": "TSTKqRBJMm2CDxNWK5APe3bTzjJCQnAnGH",
+        "address": "TFccvVvxdHZywqgfTSDKdzFDTR4qs9fpea",
         "chain": "TRON",
         "label_name": "HTX",
         "vasp_type": "exchange",
@@ -866,7 +872,7 @@ VASP_SEED_DATA: list[dict] = [
         "added_by": "system",
     },
     {
-        "address": "TN2YifEhsN27JRwDQ7i1GsmZ3ohsHzbiRG",
+        "address": "TVBhCB5vooADMq8BscT3xkwyimHZVdKBA3",
         "chain": "TRON",
         "label_name": "Coinbase",
         "vasp_type": "exchange",
@@ -879,7 +885,7 @@ VASP_SEED_DATA: list[dict] = [
     },
     # ─── Additional Known Addresses ─────────────────────────────────────
     {
-        "address": "THPvaUhoh2Qn2y9THCZML3H4ABSMi7cBM5",
+        "address": "THoPMThZWo4fPDFo23fS2wvFCU3RYHkDL2",
         "chain": "TRON",
         "label_name": "Binance (Cold Wallet)",
         "vasp_type": "exchange",
@@ -891,7 +897,7 @@ VASP_SEED_DATA: list[dict] = [
         "added_by": "system",
     },
     {
-        "address": "TYQnQRUMEfLiysZxBcgEERSoFkTMB1LMFH",
+        "address": "TDMG2C34Aq29rnrtxueLLH7E9JqmVbePS5",
         "chain": "TRON",
         "label_name": "WazirX (Cold Wallet)",
         "vasp_type": "exchange",

@@ -10,12 +10,12 @@
 All TX hashes below are 64-char hex strings; all TRON addresses are valid 34-char Base58 strings starting with `T`.
 
 ### Scenario A: Simple 2-Hop (Happy Path)
-- **Seed Wallet:** `TN2YqTv7ykawJjgqQfcbRGFyEY8ehPkuGM` (`reported_amount: 50000.00`, `token: USDT`)
+- **Seed Wallet:** `TFNyk1vSQ82XBvvboW7mLBtneeDToVt1KW` (`reported_amount: 50000.00`, `token: USDT`)
 - **Reported At:** `2026-11-20T14:30:00Z`
 - **Mocked TronGrid Transactions:**
-  1. Hop 1: `TN2YqTv7ykawJjgqQfcbRGFyEY8ehPkuGM` → `TLayerA1qwerty123456789012345678` | `49500.00 USDT` | `2026-11-20T15:10:00Z` | `tx_hash: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`
-  2. Hop 2: `TLayerA1qwerty123456789012345678` → `TWazirXdeposit1234567890123456` | `48000.00 USDT` | `2026-11-20T16:45:00Z` | `tx_hash: bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb`
-- **Seed Label Match:** `TWazirXdeposit1234567890123456` → `"WazirX"` (`source: "public"`, `confidence: 0.60`)
+  1. Hop 1: `TFNyk1vSQ82XBvvboW7mLBtneeDToVt1KW` → `TNMKZSJx7g5Ryv91BXgv2q56VRQwi1ozue` | `49500.00 USDT` | `2026-11-20T15:10:00Z` | `tx_hash: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`
+  2. Hop 2: `TNMKZSJx7g5Ryv91BXgv2q56VRQwi1ozue` → `TNgEDH3RhWAWm7yBDmJgwWBZiGkjEnFaK7` | `48000.00 USDT` | `2026-11-20T16:45:00Z` | `tx_hash: bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb`
+- **Seed Label Match:** `TNgEDH3RhWAWm7yBDmJgwWBZiGkjEnFaK7` → `"WazirX"` (`source: "public"`, `confidence: 0.60`)
 - **Expected Result:**
   - `nodes`: 3 (`seed`, `intermediate`, `vasp_candidate`)
   - `edges`: 2 (`pruned=False`)
@@ -23,22 +23,22 @@ All TX hashes below are 64-char hex strings; all TRON addresses are valid 34-cha
   - `recommended_actions`: Includes `"Issue Section 91 CrPC notice to WazirX"` and `"freeze"` (`HIGH` urgency)
 
 ### Scenario B: 3-Hop with Branching & Dust (Pruning Test)
-- **Seed Wallet:** `TSeedBranchTest123456789012345678` (`reported_amount: 100000.00`, `token: USDT`)
+- **Seed Wallet:** `TC2JpJStJPhCiJg8GDGutbHoU7zBXrazYK` (`reported_amount: 100000.00`, `token: USDT`)
 - **Reported At:** `2026-11-20T10:00:00Z`
 - **Mocked TronGrid Transactions:**
-  1. Hop 1: Seed → `TBranch1aaaaaa1234567890123456` (`60000.00 USDT`, `2026-11-20T11:00:00Z`)
-  2. Hop 1: Seed → `TBranch1bbbbbb1234567890123456` (`35000.00 USDT`, `2026-11-20T11:05:00Z`)
-  3. Hop 1: Seed → `TDustAddr00001234567890123456` (`500.00 USDT`, `2026-11-20T11:10:00Z`) — **MUST BE PRUNED** (`500 < 100000 * 0.01 = 1000`)
-  4. Hop 2: `TBranch1aaaaaa1234567890123456` → `TBinanceDeposit1234567890123456` (`58000.00 USDT`, `2026-11-20T12:00:00Z`) — Label: `"Binance"`
-  5. Hop 2: `TBranch1bbbbbb1234567890123456` → `TUnknownAddr001234567890123456` (`34000.00 USDT`, `2026-11-20T12:30:00Z`)
-  6. Hop 3: `TUnknownAddr001234567890123456` → `TKuCoinDeposit11234567890123456` (`33000.00 USDT`, `2026-11-20T13:00:00Z`) — Label: `"KuCoin"`
+  1. Hop 1: Seed → `TT1XyC9pzGn4CTyBNMj1HELebeEW3zLgcZ` (`60000.00 USDT`, `2026-11-20T11:00:00Z`)
+  2. Hop 1: Seed → `TTLSrQgGLmAPK8VPXCbLf7gk7x6TLzNrn7` (`35000.00 USDT`, `2026-11-20T11:05:00Z`)
+  3. Hop 1: Seed → `TMKNKso568TSB9c8yZjbF3CxTLCeJTQV3j` (`500.00 USDT`, `2026-11-20T11:10:00Z`) — **MUST BE PRUNED** (`500 < 100000 * 0.01 = 1000`)
+  4. Hop 2: `TT1XyC9pzGn4CTyBNMj1HELebeEW3zLgcZ` → `TAtcptJtpKLMEuKxUL9YeGPzrwQwxqPEJ8` (`58000.00 USDT`, `2026-11-20T12:00:00Z`) — Label: `"Binance"`
+  5. Hop 2: `TTLSrQgGLmAPK8VPXCbLf7gk7x6TLzNrn7` → `TN1dTU526TCojBcifuykevpRZW98wzUJ1X` (`34000.00 USDT`, `2026-11-20T12:30:00Z`)
+  6. Hop 3: `TN1dTU526TCojBcifuykevpRZW98wzUJ1X` → `TQRjK5QVnhjD8h17KJDXJa3nf2UWnpUupN` (`33000.00 USDT`, `2026-11-20T13:00:00Z`) — Label: `"KuCoin"`
 - **Expected Result:**
-  - `TDustAddr00001234567890123456` edge has `pruned=True`, `prune_reason="amount_below_threshold"`
+  - `TMKNKso568TSB9c8yZjbF3CxTLCeJTQV3j` edge has `pruned=True`, `prune_reason="amount_below_threshold"`
   - Kept edges: 5, Kept nodes: 6
   - `vasp_candidates`: 2 candidates — **Rank 1: Binance**, **Rank 2: KuCoin** (Binance ranks higher due to hop 2 vs hop 3 + higher amount)
 
 ### Scenario C: Zero Transactions (Empty Graph Edge Case)
-- **Seed Wallet:** `TSeedEdgeCase1234567890123456789` (`reported_amount: 10000.00`, `token: USDT`)
+- **Seed Wallet:** `TS2sdoZQW7SjMgbUYzSc2yjsm4SJNweJRL` (`reported_amount: 10000.00`, `token: USDT`)
 - **Mocked TronGrid Transactions:** `[]` (0 outgoing transactions)
 - **Expected Result:**
   - Case status transitions `PENDING` → `TRACING` → `ANALYZED` (or `TRACED`)

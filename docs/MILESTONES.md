@@ -82,7 +82,7 @@ Read these docs before building each milestone:
 **Goal:** Match traced addresses against VASP labels and heuristics, score, and rank candidates.
 **Tasks:**
 1. Create `backend/app/models/label.py` (`VASPLabel`) and `backend/app/models/candidate.py` (`VASPCandidate`) + Alembic migrations.
-2. Create `scripts/seed_labels.py` loading all 20+ known exchange labels from `docs/DATA_MODEL.md` / `docs/VASP_ATTRIBUTION.md`.
+2. Create `backend/app/scripts/seed_labels.py` loading all 20+ known exchange labels from `docs/DATA_MODEL.md` / `docs/VASP_ATTRIBUTION.md`.
 3. Implement `backend/app/services/attribution/matcher.py` (exact match, conflict resolution, 3 heuristic detectors).
 4. Implement `backend/app/services/ranking/scorer.py` (6-signal weighted formula, tie-breaking, `0.20` min threshold).
 5. Create `backend/app/api/routes/candidates.py` (`GET /candidates`, `POST /candidates/{cid}/review`) and `backend/app/api/routes/labels.py` (`GET /labels/search`, `POST /labels`).

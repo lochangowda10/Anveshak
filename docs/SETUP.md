@@ -126,6 +126,7 @@ anveshak/
 ├── .env.example             ← Environment variable template
 ├── docker-compose.yml       ← Full stack orchestration
 ├── backend/
+│   ├── Dockerfile           ← Backend container image
 │   ├── pyproject.toml       ← Python deps + tool config
 │   ├── alembic.ini          ← Migration config
 │   ├── alembic/             ← DB migrations
@@ -135,9 +136,11 @@ anveshak/
 │   │   ├── api/             ← Route handlers
 │   │   ├── models/          ← DB + Pydantic models
 │   │   ├── services/        ← Business logic modules
+│   │   ├── scripts/         ← CLI utilities (seed_labels.py)
 │   │   └── db/              ← Database session, engine
 │   └── tests/
 ├── frontend/
+│   ├── Dockerfile           ← Frontend container image
 │   ├── package.json
 │   ├── vite.config.ts
 │   ├── src/
@@ -149,13 +152,5 @@ anveshak/
 │   │   ├── store/
 │   │   └── graph/           ← Cytoscape config
 │   └── tests/
-├── docs/
-│   ├── ADR.md               ← Architecture decisions
-│   ├── API_CONTRACT.md      ← Interface specifications
-│   ├── SPRINT_PLAN.md       ← Sprint tasks & timeline
-│   └── AGENT_GUIDE.md       ← AI coding agent rules
-├── infra/
-│   └── Dockerfile
-└── scripts/
-    └── seed_labels.py       ← Seed VASP label data
+└── docs/                    ← Machine-executable specs & ADRs
 ```

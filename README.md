@@ -90,6 +90,7 @@ Whenever either developer starts or completes a task:
 | [docs/ACTION_PACKAGE_SPEC.md](./docs/ACTION_PACKAGE_SPEC.md) | JSON & ReportLab PDF structure, Indian legal mappings, action rules |
 | [docs/ACCEPTANCE_TESTS.md](./docs/ACCEPTANCE_TESTS.md) | Synthetic test scenarios (A/B/C), API/unit/E2E tests, pass criteria |
 | [docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md) | Docker Compose, Postgres provisioning, secrets, GitHub Actions CI/CD |
+| [docs/DECISIONS.md](./docs/DECISIONS.md) | Canonical tie-breaker decisions resolving all cross-doc edge cases |
 | [docs/MILESTONES.md](./docs/MILESTONES.md) | Ordered build plan (Milestones 0 → 8) with verification gates |
 
 ## 🤖 Prompt for AI Coding Agents

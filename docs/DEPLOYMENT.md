@@ -29,10 +29,10 @@ All 3 services run on a shared bridge network `anveshak-net`:
 2. On container startup, `backend` entrypoint runs:
    ```bash
    alembic upgrade head
-   python -m scripts.seed_labels
+   python -m app.scripts.seed_labels
    uvicorn app.main:app --host 0.0.0.0 --port 8000
    ```
-3. `seed_labels` MUST be idempotent (`ON CONFLICT (address, chain, source) DO NOTHING`).
+3. `backend/app/scripts/seed_labels.py` MUST be idempotent (`ON CONFLICT (address, chain, source) DO NOTHING`).
 
 ---
 

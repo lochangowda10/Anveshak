@@ -32,7 +32,7 @@ Persisted in `action_packages.json_data` and returned by `GET /api/v1/cases/{cas
     "description": "Victim transferred 50,000 USDT via TRC-20 to suspect wallet.",
     "seed_wallets": [
       {
-        "address": "TN2YqTv7ykawJjgqQfcbRGFyEY8ehPkuGM",
+        "address": "TFNyk1vSQ82XBvvboW7mLBtneeDToVt1KW",
         "chain": "TRON",
         "reported_amount": 50000.00,
         "token": "USDT"
@@ -63,7 +63,7 @@ Persisted in `action_packages.json_data` and returned by `GET /api/v1/cases/{cas
   "vasp_candidates": [
     {
       "rank": 1,
-      "address": "TWazirXdeposit1234567890123456",
+      "address": "TNgEDH3RhWAWm7yBDmJgwWBZiGkjEnFaK7",
       "chain": "TRON",
       "label": "WazirX",
       "label_source": "public",
@@ -84,8 +84,8 @@ Persisted in `action_packages.json_data` and returned by `GET /api/v1/cases/{cas
           "hops": [
             {
               "step": 1,
-              "from": "TN2YqTv7ykawJjgqQfcbRGFyEY8ehPkuGM",
-              "to": "TLayerA1qwerty123456789012345678",
+              "from": "TFNyk1vSQ82XBvvboW7mLBtneeDToVt1KW",
+              "to": "TNMKZSJx7g5Ryv91BXgv2q56VRQwi1ozue",
               "amount": 49500.00,
               "token": "USDT",
               "tx_hash": "aaa1110000000000000000000000000000000000000000000000000000000001",
@@ -94,8 +94,8 @@ Persisted in `action_packages.json_data` and returned by `GET /api/v1/cases/{cas
             },
             {
               "step": 2,
-              "from": "TLayerA1qwerty123456789012345678",
-              "to": "TWazirXdeposit1234567890123456",
+              "from": "TNMKZSJx7g5Ryv91BXgv2q56VRQwi1ozue",
+              "to": "TNgEDH3RhWAWm7yBDmJgwWBZiGkjEnFaK7",
               "amount": 48000.00,
               "token": "USDT",
               "tx_hash": "bbb2220000000000000000000000000000000000000000000000000000000002",
@@ -111,18 +111,18 @@ Persisted in `action_packages.json_data` and returned by `GET /api/v1/cases/{cas
   "recommended_actions": [
     {
       "priority": 1,
-      "action": "Issue Section 91 CrPC notice to WazirX requesting KYC details, IP logs, and linked bank accounts for deposit address TWazirXdeposit1234567890123456.",
+      "action": "Issue Section 91 CrPC notice to WazirX requesting KYC details, IP logs, and linked bank accounts for deposit address TNgEDH3RhWAWm7yBDmJgwWBZiGkjEnFaK7.",
       "legal_basis": "Section 91, Code of Criminal Procedure, 1973",
       "target_entity": "WazirX",
-      "target_address": "TWazirXdeposit1234567890123456",
+      "target_address": "TNgEDH3RhWAWm7yBDmJgwWBZiGkjEnFaK7",
       "urgency": "HIGH"
     },
     {
       "priority": 2,
-      "action": "Request immediate account freeze / lien marking for deposit address TWazirXdeposit1234567890123456 pending investigation.",
+      "action": "Request immediate account freeze / lien marking for deposit address TNgEDH3RhWAWm7yBDmJgwWBZiGkjEnFaK7 pending investigation.",
       "legal_basis": "Section 102, Code of Criminal Procedure, 1973; FIU-IND VDA Guidelines",
       "target_entity": "WazirX",
-      "target_address": "TWazirXdeposit1234567890123456",
+      "target_address": "TNgEDH3RhWAWm7yBDmJgwWBZiGkjEnFaK7",
       "urgency": "HIGH"
     },
     {

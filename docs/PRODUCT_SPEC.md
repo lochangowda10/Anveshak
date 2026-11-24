@@ -655,7 +655,7 @@ class CaseStatus(str, Enum):
 | Encoding | Base58Check (characters: `123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz`) |
 | Length | Exactly 34 characters |
 | Regex | `^T[1-9A-HJ-NP-Za-km-z]{33}$` |
-| Example valid | `TN7YwDd4u5kJqTKxoXfJgqUYTZmGCzKJvT` |
+| Example valid | `TAgN7SUzytJD7bj2vFpwbRFpyraMNt5ine` |
 | Example invalid | `0xdAC17F958D2ee523a2206206994597C13D831ec7` (Ethereum), `T123` (too short) |
 | Error code | `INVALID_TRON_ADDRESS` |
 | Error message | `"Invalid TRON address: must start with 'T', be 34 characters, and be base58 encoded"` |
