@@ -24,16 +24,18 @@ docker compose up --build
 # Frontend:         http://localhost:5173
 ```
 
-## 👥 2-Developer Pair Workflow
+## 👥 4-Developer Team Workflow
 
-We are operating an active **2-developer pair model** to ensure zero duplication of work and rapid delivery:
+We are operating an active **4-developer track model** to ensure zero duplication of work and rapid parallel delivery:
 
 ### 1. Domain Split
 
 | Track | Lead | Modules Covered |
 |---|---|---|
-| **Track A** | **Lochan** | Case Intake, TRON Chain Adapter (TronGrid), DB Schema/Models, NetworkX Graph Engine & Pruning filters |
-| **Track B** | **Teammate** | VASP Ranking & Scoring Engine, Attribution Label Store, Evidence & Action Package (PDF), Frontend (React + Cytoscape) |
+| **Track 1** | **Lochan** | Case Intake API, DB Schema & Migrations, TRON Adapter (TronGrid), NetworkX Graph Engine & Pruning |
+| **Track 2** | **Dev 2** | VASP Attribution & Label Store, 6-Signal Ranking Engine, Evidence & Action Package (JSON + PDF) |
+| **Track 3** | **Dev 3** | Frontend (`React + Vite + TypeScript`), Dashboard, Case UI, Cytoscape.js Interactive Graph |
+| **Track 4** | **Dev 4** | Dockerfiles, `docker-compose.yml`, GitHub Actions CI/CD, E2E & Acceptance Tests, Demo Seed Data |
 
 ### 2. The Live "Claim ➔ Working ➔ Finished" Flow
 

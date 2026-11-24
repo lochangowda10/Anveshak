@@ -41,17 +41,19 @@ anveshak/
 
 ---
 
-## Current Team Setup (2-Person Active Sprint)
+## Current Team Setup (4-Developer Active Sprint)
 
-> As of now, **2 core developers** are actively driving implementation.
-> Tasks are claimed asynchronously using the **Claim-Work-Finish** protocol.
+> **4 developers** are actively driving implementation across 4 non-overlapping tracks.
+> Tasks are claimed asynchronously using the **Claim ➔ Working ➔ Finished** protocol in `docs/SPRINT_PLAN.md`.
 
-### Primary Domain Split
+### Primary Domain Split (4 Tracks)
 
-| Domain / Pipeline Half | Primary Lead | Backup / Reviewer | Scope |
-|------------------------|--------------|-------------------|-------|
-| **Track A: Ingestion, Chain & Graph Core** | **Developer 1 (Lochan)** | Developer 2 | TRON adapter, TronGrid, Canonical Schema, DB Models, NetworkX traversal & pruning |
-| **Track B: Intelligence, Action Pkg & UI** | **Developer 2** | Developer 1 (Lochan) | Scoring & ranking, VASP attribution store, Evidence & PDF generator, React Cytoscape UI |
+| Track | Lead | Backup / Reviewer | Owned Modules & Scope |
+|---|---|---|---|
+| **Track 1: Ingestion, Chain & Graph Core** | **Lochan** | Dev 4 | `app/models/`, `alembic/`, `app/api/routes/cases.py`, `app/services/chain/`, `app/services/graph/`, `app/api/routes/trace.py` |
+| **Track 2: Intelligence, Ranking & Action Pkg** | **Dev 2** | Lochan | `app/services/attribution/`, `app/services/ranking/`, `app/services/evidence/`, `app/api/routes/candidates.py`, `labels.py`, `evidence.py`, `seed_labels.py` |
+| **Track 3: Frontend & Graph Visualization** | **Dev 3** | Dev 2 | `frontend/` (App Shell, Dashboard, Case List, Create Case, Case Detail, `CytoscapeGraph.tsx`, Candidate/Evidence/Action views) |
+| **Track 4: Infra, CI/CD & QA / E2E Tests** | **Dev 4** | Lochan | `docker-compose.yml`, `backend/Dockerfile`, `frontend/Dockerfile`, `.github/workflows/ci.yml`, `tests/e2e/`, `seed_demo.py`, acceptance verification |
 
 ---
 

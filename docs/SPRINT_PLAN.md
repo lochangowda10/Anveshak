@@ -1,6 +1,6 @@
 # ANVESHAK — Sprint Plan (MVP)
 
-> Active Sprint: 2-Developer Pair Workflow · ~4 weeks to SIH demo · 2-week sprints
+> Active Sprint: 4-Developer Track Workflow · ~4 weeks to SIH demo · 2-week sprints
 
 ### Task Status Protocol
 
