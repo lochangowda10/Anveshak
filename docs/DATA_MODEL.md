@@ -466,16 +466,20 @@ Per-case ranked list of addresses identified as likely VASP endpoints (exchanges
 | 4 | `chain` | `VARCHAR(10)` | NO | — | Chain identifier |
 | 5 | `rank` | `SMALLINT` | NO | — | 1 = highest priority; dense ranking |
 | 6 | `label` | `VARCHAR(255)` | YES | — | Resolved label from `vasp_labels` or `NULL` if unlabelled |
-| 7 | `confidence` | `DECIMAL(3,2)` | NO | — | Composite confidence score (0.00–1.00) |
-| 8 | `scoring_breakdown` | `JSONB` | NO | — | Per-signal scores (see §3.8.1) |
-| 9 | `evidence_path_ids` | `TEXT[]` | NO | — | Array of `trace_edges.path_id` values linking seed to this address |
-| 10 | `created_at` | `TIMESTAMPTZ` | NO | `NOW()` | Row creation time |
+| 7 | `label_source` | `VARCHAR(20)` | YES | — | `'agency'`, `'licensed'`, `'public'`, `'heuristic'`, or `NULL` |
+| 8 | `confidence` | `DECIMAL(3,2)` | NO | — | Composite confidence score (0.00–1.00) |
+| 9 | `scoring_breakdown` | `JSONB` | NO | — | Per-signal scores (see §3.8.1) |
+| 10 | `evidence_path_ids` | `TEXT[]` | NO | — | Array of `trace_edges.path_id` values linking seed to this address |
+| 11 | `review_status` | `VARCHAR(20)` | NO | `'pending'` | `CHECK (review_status IN ('pending','accepted','rejected'))` |
+| 12 | `review_notes` | `TEXT` | YES | — | Optional investigator review notes |
+| 13 | `created_at` | `TIMESTAMPTZ` | NO | `NOW()` | Row creation time |
 
 **Constraints:**
 
 | Name | Type | Columns |
 |---|---|---|
 | `uq_vasp_candidates_case_addr` | UNIQUE | `(case_id, address)` |
+| `ck_vasp_candidates_review` | CHECK | `review_status IN ('pending','accepted','rejected')` |
 
 **Indexes:**
 
@@ -487,12 +491,12 @@ Per-case ranked list of addresses identified as likely VASP endpoints (exchanges
 
 ```jsonc
 {
-  "label_confidence": 0.90,       // float 0–1, from vasp_labels.confidence
-  "volume_score": 0.85,           // float 0–1, normalised total_received
-  "hop_proximity_score": 0.70,    // float 0–1, inverse of hop_depth
-  "fan_in_score": 0.60,           // float 0–1, normalised in_degree
-  "temporal_score": 0.75,         // float 0–1, based on time proximity to seed tx
-  "composite_score": 0.78         // weighted sum (see GRAPH_ENGINE spec for weights)
+  "label_match_score": 1.00,      // float 0–1 (weight 0.35)
+  "hop_depth_score": 0.75,        // float 0–1 (weight 0.15)
+  "amount_relevance_score": 0.96, // float 0–1 (weight 0.20)
+  "time_gap_score": 0.99,         // float 0–1 (weight 0.10)
+  "path_continuity_score": 1.00,  // float 0–1 (weight 0.10)
+  "degree_fanout_score": 1.00     // float 0–1 (weight 0.10)
 }
 ```
 
@@ -506,9 +510,13 @@ CREATE TABLE vasp_candidates (
     chain               VARCHAR(10) NOT NULL,
     rank                SMALLINT NOT NULL,
     label               VARCHAR(255),
+    label_source        VARCHAR(20),
     confidence          DECIMAL(3,2) NOT NULL,
     scoring_breakdown   JSONB NOT NULL,
     evidence_path_ids   TEXT[] NOT NULL,
+    review_status       VARCHAR(20) NOT NULL DEFAULT 'pending'
+                            CHECK (review_status IN ('pending','accepted','rejected')),
+    review_notes        TEXT,
     created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     UNIQUE (case_id, address)
 );
@@ -1022,9 +1030,13 @@ CREATE TABLE vasp_candidates (
     chain               VARCHAR(10) NOT NULL,
     rank                SMALLINT NOT NULL,
     label               VARCHAR(255),
+    label_source        VARCHAR(20),
     confidence          DECIMAL(3,2) NOT NULL,
     scoring_breakdown   JSONB NOT NULL,
     evidence_path_ids   TEXT[] NOT NULL,
+    review_status       VARCHAR(20) NOT NULL DEFAULT 'pending'
+                            CHECK (review_status IN ('pending','accepted','rejected')),
+    review_notes        TEXT,
     created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     UNIQUE (case_id, address)
 );
