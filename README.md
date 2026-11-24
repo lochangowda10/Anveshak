@@ -67,16 +67,35 @@ Whenever either developer starts or completes a task:
 
 ## Documentation
 
+### Governance & Workflow
 | Document | Purpose |
 |----------|---------|
 | [CONTEXT.md](./CONTEXT.md) | Project overview, stack, roadmap |
 | [CONTRIBUTING.md](./CONTRIBUTING.md) | Git workflow, commit conventions, code standards |
-| [OWNERSHIP.md](./OWNERSHIP.md) | Module ownership & team allocation |
-| [docs/API_CONTRACT.md](./docs/API_CONTRACT.md) | Interface specifications between modules |
+| [OWNERSHIP.md](./OWNERSHIP.md) | Module ownership & 2-dev collaboration rules |
 | [docs/ADR.md](./docs/ADR.md) | Architecture Decision Records |
 | [docs/SPRINT_PLAN.md](./docs/SPRINT_PLAN.md) | Active sprint plan & live task status tracker |
 | [docs/AGENT_GUIDE.md](./docs/AGENT_GUIDE.md) | AI coding agent best practices |
 | [docs/SETUP.md](./docs/SETUP.md) | Detailed setup instructions |
+
+### Machine-Executable Specifications
+| Document | Purpose |
+|----------|---------|
+| [docs/PRODUCT_SPEC.md](./docs/PRODUCT_SPEC.md) | Exact features, user roles, workflows, validation rules, edge cases |
+| [docs/DATA_MODEL.md](./docs/DATA_MODEL.md) | PostgreSQL schema (9 tables), indexes, triggers, ER diagram, seed SQL |
+| [docs/API_CONTRACT.md](./docs/API_CONTRACT.md) | Every REST endpoint, payloads, error codes, Python Protocols |
+| [docs/GRAPH_ENGINE.md](./docs/GRAPH_ENGINE.md) | BFS traversal, 6 pruning filters, cycle detection, caching, pseudocode |
+| [docs/VASP_ATTRIBUTION.md](./docs/VASP_ATTRIBUTION.md) | Label sources, matching rules, scoring formula, conflict resolution |
+| [docs/UI_SPEC.md](./docs/UI_SPEC.md) | All 6 screens, components, Cytoscape styling, polling, states |
+| [docs/ACTION_PACKAGE_SPEC.md](./docs/ACTION_PACKAGE_SPEC.md) | JSON & ReportLab PDF structure, Indian legal mappings, action rules |
+| [docs/ACCEPTANCE_TESTS.md](./docs/ACCEPTANCE_TESTS.md) | Synthetic test scenarios (A/B/C), API/unit/E2E tests, pass criteria |
+| [docs/MILESTONES.md](./docs/MILESTONES.md) | Ordered build plan (Milestones 0 → 8) with verification gates |
+
+## 🤖 Prompt for AI Coding Agents
+
+Give this exact prompt to your AI coding agent when starting work:
+
+> Read `README.md`, `CONTEXT.md`, `docs/`, and all existing code. Build only the next milestone from `docs/MILESTONES.md`. Follow `docs/API_CONTRACT.md`, `docs/DATA_MODEL.md`, and `docs/GRAPH_ENGINE.md` exactly. Do not invent undocumented features, APIs, database fields, or UI behavior. If requirements conflict or are missing, stop and ask. After each milestone, add tests, update documentation, and provide run instructions.
 
 ## License
 
