@@ -1,0 +1,45 @@
+# ANVESHAK — .gitignore
+
+# ─── Environment ─────────────────────────────
+.env
+.env.local
+.env.production
+
+# ─── Python ──────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+*.egg
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# ─── Node / Frontend ────────────────────────
+node_modules/
+frontend/dist/
+frontend/build/
+.vite/
+*.tsbuildinfo
+
+# ─── IDE ─────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ─── Docker ──────────────────────────────────
+docker-compose.override.yml
+
+# ─── Logs ────────────────────────────────────
+*.log
+logs/
