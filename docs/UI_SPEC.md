@@ -28,7 +28,7 @@
 | `EXPORTED` | `bg-emerald-100` | `text-emerald-800` | — |
 | `CLOSED` | `bg-slate-200` | `text-slate-700` | — |
 | `TRACE_FAILED` | `bg-red-100` | `text-red-700` | — |
-| `ANALYSIS_FAILED` | `bg-orange-100` | `text-orange-700` | — |
+| `ANALYSIS_FAILED` | `bg-orange-100` | `text-orange-700` | Reserved in DB schema (MVP trace failures use `TRACE_FAILED`) |
 
 ---
 
@@ -135,7 +135,7 @@
 
 #### Tab 3: Candidates
 - **Ranked VASP Candidates Table:**
-  - Columns: `Rank` (`#1`, `#2`...), `VASP Label` (e.g. `"WazirX"` or `"Unattributed High-Volume"`), `Address` (copyable + TronScan link), `Source` (`public` / `agency` / `heuristic`), `Confidence` (progress bar + `%`), `Review Status`, `Actions` (`Accept` ✓ / `Reject` ✗ buttons calling `POST .../review`).
+  - Columns: `Rank` (`#1`, `#2`...), `VASP Label` (e.g. `"WazirX"` or `"Unattributed High-Volume"`), `Address` (copyable + TronScan link), `Source` (`public` / `agency` / `heuristic`), `Confidence` (progress bar + `%`), `Review Status`, `Actions` (`Accept` ✓ / `Reject` ✗ buttons calling `POST /api/v1/cases/{case_id}/candidates/{candidate_id}/review` with `{"decision": "accepted" | "rejected"}`).
   - **Expandable Row:** Clicking a row expands the **6-Signal Scoring Breakdown** (`label_match_score`, `hop_depth_score`, `amount_relevance_score`, `time_gap_score`, `path_continuity_score`, `degree_fanout_score`) as horizontal mini-bars + linked `evidence_path_ids`.
 - **Empty State:** `"No VASP candidates identified above the 20% confidence threshold."`
 

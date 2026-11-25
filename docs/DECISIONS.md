@@ -42,3 +42,37 @@
 
 ## 7. `docs/DATA_MODEL.md` Single Source of Truth (Resolved)
 - Section 3 of `docs/DATA_MODEL.md` is the **single authoritative DDL** for all 9 tables. No duplicate DDL appendix exists.
+
+---
+
+## 8. Specification Authority Hierarchy (Resolved)
+- If an AI coding agent ever encounters a wording nuance across docs, resolve using this strict precedence order:
+  1. `docs/DECISIONS.md` (canonical tie-breakers)
+  2. `docs/API_CONTRACT.md` & `docs/DATA_MODEL.md` Section 3 (wire payloads, error formats, status codes, DB column names/types)
+  3. Module specs: `docs/GRAPH_ENGINE.md`, `docs/VASP_ATTRIBUTION.md`, `docs/ACTION_PACKAGE_SPEC.md`, `docs/UI_SPEC.md`, `docs/DEPLOYMENT.md`
+  4. `docs/PRODUCT_SPEC.md` (functional workflows, roles, non-goals)
+
+## 9. Linear Alembic Migration Chain & Single-Head Rule (Resolved)
+- All migrations MUST use sequential 4-digit revision IDs matching `backend/alembic/versions/0000_initial.py`:
+  - `0000_initial.py` (`down_revision = None`) — M0 (already merged)
+  - `0001_cases_and_wallets.py` (`down_revision = "0000"`) — M1 (`pgcrypto`, `set_updated_at()`, `cases`, `case_tags`, `seed_wallets`)
+  - `0002_transactions.py` (`down_revision = "0001"`) — M2 (`transactions`)
+  - `0003_trace_tables.py` (`down_revision = "0002"`) — M3 (`trace_edges`, `trace_nodes`)
+  - `0004_vasp_tables.py` (`down_revision = "0003"`) — M4 (`vasp_labels`, `vasp_candidates`)
+  - `0005_action_packages.py` (`down_revision = "0004"`) — M5 (`action_packages`)
+- Generate with explicit IDs (`alembic revision --rev-id 000X -m "..."`) and ensure `backend/alembic/env.py` imports all ORM models before referencing `Base.metadata`.
+- Before opening any PR containing a migration, rebase onto `dev` and verify `alembic heads` returns strictly **one** head.
+
+## 10. Shared Integration Files & Parallel Track Rule (Resolved)
+- Every backend route module (`cases`, `trace`, `candidates`, `labels`, `evidence`) defines its own `APIRouter` and registers only one `app.include_router(..., prefix="/api/v1")` line in `backend/app/main.py` to avoid merge conflicts.
+- `backend/app/models/__init__.py` re-exports ORM models added by each milestone so `alembic/env.py` and `tests/conftest.py` auto-discover tables cleanly.
+- On the frontend, Track 4 (`M6`) creates `frontend/src/pages/CaseDetail.tsx` with clean placeholder slots for the Graph, Candidates, Evidence, and Action Package tabs so Track 5 (`M7`) plugs in components with minimal diff.
+
+## 11. Canonical Field & API Enum Names (Resolved)
+- **`vasp_labels` columns:** `label`, `label_type`, `source`, `confidence` (NOT `label_name`, `vasp_type`, `confidence_base`).
+- **`trace_edges` prune column:** `prune_reason` (NOT `pruned_reason`).
+- **Candidate review:** `POST /api/v1/cases/{case_id}/candidates/{candidate_id}/review` with body `{"decision": "accepted" | "rejected" | "pending", "notes": ...}` (`API_CONTRACT.md` §2.8).
+- **Manual VASP labels:** `POST /api/v1/labels` and `GET /api/v1/labels/search` (`API_CONTRACT.md` §2.12).
+- **Graph JSON payload:** Top-level `{"nodes": [...], "edges": [...], "metadata": {...}}` with node fields `id`, `label`, `type`, `hop_depth`, `in_degree`, `out_degree`, `total_received`, `total_sent`, `vasp_label`, `vasp_confidence` (`API_CONTRACT.md` §2.6).
+- **Case status failures (MVP):** Trace and attribution run inside one background task triggered by `POST /api/v1/cases/{case_id}/trace`; any failure sets `TRACE_FAILED`. (`ANALYSIS_FAILED` is kept in the DB CHECK constraint as reserved for future async split.)
+- **Error response format:** FastAPI standard `{"detail": "..."}` (and Pydantic 422 `{"detail": [...]}` list) per `API_CONTRACT.md` §1.

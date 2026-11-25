@@ -19,9 +19,10 @@ Read these docs before building each milestone:
 9. `docs/ACCEPTANCE_TESTS.md` — synthetic scenarios & pass criteria
 
 **Execution Rules:**
-- Build **ONE milestone at a time**.
+- Read `docs/DECISIONS.md` and `OWNERSHIP.md` first. Build **ONE milestone at a time**.
 - Do NOT invent undocumented endpoints, database columns, or UI screens.
-- After each milestone: run all tests, run linters, verify the milestone's exit criteria, commit using Conventional Commits, and update `docs/SPRINT_PLAN.md`.
+- Keep Alembic migrations strictly linear (`0001` → `0002` → `0003` → `0004` → `0005`) and re-export new ORM models from `backend/app/models/__init__.py`.
+- After each milestone: run all tests, run linters, verify the milestone's exit criteria, commit using Conventional Commits, update `docs/SPRINT_PLAN.md`, and open a PR targeting `dev`.
 - Do NOT proceed to the next milestone until verification passes.
 
 ---
@@ -58,7 +59,7 @@ Read these docs before building each milestone:
 **Goal:** Fetch and normalize TRON TRC-20/TRX transactions from TronGrid with PostgreSQL caching.
 **Tasks:**
 1. Create `backend/app/services/chain/base.py` implementing `ChainAdapter` Protocol & `TransactionData` dataclass.
-2. Create `backend/app/models/transaction.py` (`Transaction` model) + Alembic migration.
+2. Create `backend/app/models/transaction.py` (`Transaction` model) + Alembic migration `0002_transactions.py` (`down_revision = "0001"`).
 3. Create `backend/app/services/chain/cache.py` (24-hour TTL DB cache check & upsert).
 4. Create `backend/app/services/chain/tron.py` (`TronAdapter` calling TronGrid `/v1/accounts/{address}/transactions/trc20` & `/transactions`, pagination up to 200/page, 300ms rate limiter, exponential backoff on 429).
 5. Write mocked `httpx` tests verifying normalization, pagination, rate-limit retry, and cache hit behavior.
@@ -69,7 +70,7 @@ Read these docs before building each milestone:
 ## Milestone 3: Graph Engine (BFS + 6 Pruning Filters)
 **Goal:** Execute pruned multi-hop BFS trace as a background task and serve Cytoscape JSON.
 **Tasks:**
-1. Create `backend/app/models/trace.py` (`TraceNode`, `TraceEdge`) + Alembic migration.
+1. Create `backend/app/models/trace.py` (`TraceNode`, `TraceEdge`) + Alembic migration `0003_trace_tables.py` (`down_revision = "0002"`).
 2. Implement `backend/app/services/graph/engine.py` (`GraphEngine`) following `docs/GRAPH_ENGINE.md` (BFS, 6 pruning filters in exact order, path-local cycle detection, error threshold abort).
 3. Implement `backend/app/services/graph/serializer.py` (NetworkX / DB records → Cytoscape JSON).
 4. Create `backend/app/api/routes/trace.py`: `POST /api/v1/cases/{id}/trace` (`BackgroundTasks`, `202` / `409`) and `GET /api/v1/cases/{id}/graph`.
@@ -81,7 +82,7 @@ Read these docs before building each milestone:
 ## Milestone 4: VASP Attribution & Ranking Engine
 **Goal:** Match traced addresses against VASP labels and heuristics, score, and rank candidates.
 **Tasks:**
-1. Create `backend/app/models/label.py` (`VASPLabel`) and `backend/app/models/candidate.py` (`VASPCandidate`) + Alembic migrations.
+1. Create `backend/app/models/label.py` (`VASPLabel`) and `backend/app/models/candidate.py` (`VASPCandidate`) + Alembic migration `0004_vasp_tables.py` (`down_revision = "0003"`).
 2. Create `backend/app/scripts/seed_labels.py` loading all 20+ known exchange labels from `docs/DATA_MODEL.md` / `docs/VASP_ATTRIBUTION.md`.
 3. Implement `backend/app/services/attribution/matcher.py` (exact match, conflict resolution, 3 heuristic detectors).
 4. Implement `backend/app/services/ranking/scorer.py` (6-signal weighted formula, tie-breaking, `0.20` min threshold).
@@ -95,7 +96,7 @@ Read these docs before building each milestone:
 ## Milestone 5: Evidence Assembly & Action Package (JSON + PDF)
 **Goal:** Assemble provenance-tagged evidence paths and export ReportLab PDF action packages.
 **Tasks:**
-1. Create `backend/app/models/action_package.py` (`ActionPackage`) + Alembic migration.
+1. Create `backend/app/models/action_package.py` (`ActionPackage`) + Alembic migration `0005_action_packages.py` (`down_revision = "0004"`).
 2. Implement `backend/app/services/evidence/assembler.py` (path reconstruction, flow retention %).
 3. Implement `backend/app/services/evidence/action_generator.py` (deterministic CrPC 91 / 102 / IEA 65B recommendations).
 4. Implement `backend/app/services/evidence/pdf_generator.py` (ReportLab A4 multi-page PDF matching `docs/ACTION_PACKAGE_SPEC.md`).
@@ -133,6 +134,6 @@ Read these docs before building each milestone:
 **Tasks:**
 1. Implement E2E tests for Scenario A, B, and C (`docs/ACCEPTANCE_TESTS.md`).
 2. Verify all empty states, error states, and loading skeletons in UI.
-3. Create `scripts/seed_demo.py` with realistic demo cases ready for SIH presentation.
+3. Create `backend/app/scripts/seed_demo.py` with realistic demo cases ready for SIH presentation.
 4. Run full CI check (`ruff`, `black`, `pytest --cov`, `tsc`, `vitest`).
 **Verification:** 100% of acceptance tests pass with `>= 80%` backend coverage; clean `docker compose up` demo works end-to-end.

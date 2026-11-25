@@ -18,12 +18,12 @@ main (protected — release baseline)
 
 ### The 5-Developer Sync Protocol
 
-To avoid overlapping work across the five active developers (Lochan, Hanamaraddi, Harshitha, Haripriya, Krishnapriya):
+To avoid overlapping work across the five active developers (**Lochan [Team Lead]**, **Hanamaraddi**, **Harshitha**, **Haripriya**, **Krishnapriya**):
 1. **Always sync before starting:** `git checkout dev && git pull origin dev`.
-2. **Claim task:** Mark task as `[WORKING: <Name>]` in `docs/SPRINT_PLAN.md` and push to `dev`.
+2. **Claim task:** Mark task as `[WORKING: <Name>]` in `docs/SPRINT_PLAN.md`, commit, and push to `dev` (the only exception allowed for direct pushes to `dev` — no application code).
 3. **Branch:** Create `feat/<task-name>` off `dev`.
-4. **Merge & Mark Done:** Merge into `dev` (or open PR), update `docs/SPRINT_PLAN.md` to `[FINISHED: <Name>]`, and push to `dev`.
-5. **Ping the team** so everyone knows new functionality is available to pull.
+4. **Open PR to `dev`:** Rebase on latest `dev`, ensure CI passes locally (`ruff`, `black`, `pytest`, `pnpm lint`, `tsc --noEmit`, `pnpm test --run`), update `docs/SPRINT_PLAN.md` to `[FINISHED: <Name>]` on your branch, push your feature branch, and open a Pull Request into `dev` using `.github/pull_request_template.md`.
+5. **Review & Merge Gate:** Module backup or **Lochan (Team Lead)** reviews and merges into `dev`. Only **Lochan** merges verified milestones from `dev` into `main`.
 
 ### Branch Naming Convention
 
@@ -38,10 +38,10 @@ To avoid overlapping work across the five active developers (Lochan, Hanamaraddi
 
 ### Rules
 
-1. **Never push to `main` or `dev` directly.** Always open a Pull Request.
-2. **One feature per branch.** Keep PRs small and focused (< 400 lines diff).
-3. **Rebase on `dev` before opening a PR.** No merge commits in feature branches.
-4. **Delete branch after merge.**
+1. **Never push application code directly to `main` or `dev`.** Only lightweight `[WORKING]` claim updates to `docs/SPRINT_PLAN.md` may push directly to `dev`; all code changes enter `dev` via Pull Request, and only Team Lead (Lochan) merges `dev → main`.
+2. **One feature per branch.** Keep PRs focused on one milestone/task.
+3. **Rebase on `dev` before opening a PR.** Resolve conflicts and keep Alembic migrations strictly linear (`alembic heads` MUST show 1 head).
+4. **Delete feature branch after merge.**
 5. **Use conventional commits** (see below).
 
 ---

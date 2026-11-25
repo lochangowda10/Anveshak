@@ -6,38 +6,61 @@
 
 ---
 
-## Module Map
+## Module Map (Canonical Repository Layout)
 
 ```
 anveshak/
+├── .github/
+│   ├── CODEOWNERS            # Track auto-review assignments
+│   ├── pull_request_template.md
+│   └── workflows/ci.yml      # backend-ci + frontend-ci
 ├── backend/
+│   ├── Dockerfile
+│   ├── docker-entrypoint.sh
+│   ├── pyproject.toml        # Python deps, ruff, black, pytest
+│   ├── alembic.ini
+│   ├── alembic/versions/     # Sequential migrations: 0000 .. 0005
 │   ├── app/
-│   │   ├── api/              # REST endpoints (FastAPI)
-│   │   ├── core/             # Config, security, shared utilities
-│   │   ├── models/           # SQLAlchemy / Pydantic models
+│   │   ├── main.py           # FastAPI entry + router mounts (shared line-add)
+│   │   ├── core/             # config.py, database.py (M0 — done)
+│   │   ├── api/
+│   │   │   ├── routes/       # cases.py, trace.py, candidates.py, labels.py, evidence.py
+│   │   │   └── schemas/      # Pydantic v2 request/response schemas
+│   │   ├── models/           # SQLAlchemy ORM models (__init__.py re-exports all)
 │   │   ├── services/
-│   │   │   ├── intake/       # Case intake & validation
-│   │   │   ├── chain/        # Blockchain adapters (TRON, EVM)
-│   │   │   ├── graph/        # Graph engine & pruning
-│   │   │   ├── ranking/      # VASP ranking signals
-│   │   │   ├── attribution/  # Endpoint identification
-│   │   │   └── evidence/     # Evidence packaging & action gen
-│   │   └── db/               # Database, migrations
-│   ├── tests/
-│   └── alembic/
-├── frontend/
-│   ├── src/
-│   │   ├── components/       # React components
-│   │   ├── pages/            # Route-level pages
-│   │   ├── hooks/            # Custom hooks
-│   │   ├── services/         # API client layer
-│   │   ├── store/            # State management
-│   │   └── graph/            # Cytoscape graph config & rendering
+│   │   │   ├── chain/        # ChainAdapter, TronAdapter, 24h DB cache
+│   │   │   ├── graph/        # GraphEngine, 6 pruning filters, Cytoscape serializer
+│   │   │   ├── attribution/  # Label matcher & 3 heuristic detectors
+│   │   │   ├── ranking/      # 6-signal scoring & ranking engine
+│   │   │   └── evidence/     # Evidence assembler, action rules, ReportLab PDF
+│   │   └── scripts/          # seed_labels.py, seed_demo.py
 │   └── tests/
-├── infra/                    # Docker, docker-compose, CI
-├── docs/                     # Architecture docs, API docs
-└── scripts/                  # Dev utilities, seed data
+├── frontend/
+│   ├── Dockerfile
+│   ├── package.json
+│   └── src/
+│       ├── App.tsx           # Router & App Shell
+│       ├── components/       # StatusBadge, Toast, CandidatePanel, EvidenceView, ActionPackageView
+│       ├── pages/            # Dashboard.tsx, CaseList.tsx, CreateCase.tsx, CaseDetail.tsx
+│       ├── context/          # CaseContext
+│       ├── services/         # Typed fetch API client (api.ts)
+│       └── graph/            # CytoscapeGraph.tsx
+├── docs/                     # Machine-executable specifications & DECISIONS.md
+├── docker-compose.yml        # postgres:16 + backend + frontend
+├── LICENSE
+└── SECURITY.md
 ```
+
+---
+
+## Shared Integration Files Protocol (Zero Merge Conflicts)
+
+| Shared File | Rule |
+|---|---|
+| `backend/app/main.py` | Only add your track's router import + `app.include_router(..., prefix="/api/v1")` line. |
+| `backend/app/models/__init__.py` | Import and re-export every ORM model you add so Alembic & `tests/conftest.py` auto-discover tables. |
+| `backend/alembic/versions/` | Follow sequential IDs (`0001`–`0005` per `docs/DECISIONS.md` §9). Always run `alembic heads` (must be 1 head) after rebasing onto `dev`. |
+| `frontend/src/pages/CaseDetail.tsx` | Track 4 (M6) defines clean tab slot containers (`Graph`, `Candidates`, `Evidence`, `Action Package`); Track 5 (M7) plugs components into those slots. |
 
 ---
 
@@ -73,9 +96,8 @@ To ensure nobody works on the same task at the same time:
    - If blocked or modifying shared interface contracts (`docs/API_CONTRACT.md`), sync immediately with the other dev.
 
 3. **When finished:**
-   - Run tests + linter (`pytest`, `ruff`, `pnpm test`).
-   - Open PR targeting `dev` (or merge directly if pairing).
-   - Update the task in `docs/SPRINT_PLAN.md` to `[FINISHED: @Name]` (or check the box `[x]`).
+   - Run tests + linters (`ruff check .`, `black --check .`, `pytest`, `pnpm lint`, `tsc --noEmit`, `pnpm test --run`).
+   - Rebase onto latest `dev` (`git pull --rebase origin dev`), update the task in `docs/SPRINT_PLAN.md` to `[FINISHED: @Name]`, push your branch, and open a Pull Request targeting `dev` for Team Lead (**Lochan**) / backup review.
    - Ping the teammate: _"Finished task X, merged to dev. You're clear to pull."_
 
 ---

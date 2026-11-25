@@ -93,16 +93,15 @@ The root entity. Each row represents one victim complaint / investigation.
 
 #### 3.1.1 `trace_config` JSONB Schema
 
-When present, `trace_config` MUST conform to this structure:
+When present, `trace_config` MUST conform to `API_CONTRACT.md` §2.5:
 
 ```jsonc
 {
-  "hop_limit": 5,              // int, 1–10, default 5
-  "time_window_hours": 72,     // int, 1–720, default 72
-  "min_amount": 10.0,          // float, >= 0, default 10.0 (USDT)
-  "max_fan_out": 50,           // int, 1–200, default 50
-  "tokens": ["USDT"],          // string[], subset of ["USDT","TRX","USDC"]
-  "chains": ["TRON"]           // string[], subset of ["TRON","ETH","BTC"]
+  "hop_limit": 3,               // int, 1–5, default 3
+  "time_window_before_days": 30,// int, 1–365, default 30
+  "time_window_after_days": 7,  // int, 0–90, default 7
+  "degree_cap": 100,            // int, 10–1000, default 100
+  "amount_threshold_pct": 0.01  // float, 0.0–1.0, default 0.01
 }
 ```
 
@@ -146,7 +145,7 @@ Freeform tags for case categorisation (e.g. `"pig_butchering"`, `"romance_scam"`
 |---|--------|------|----------|---------|---------------------|
 | 1 | `id` | `SERIAL` | NO | auto-increment | `PRIMARY KEY` |
 | 2 | `case_id` | `UUID` | NO | — | `REFERENCES cases(id) ON DELETE CASCADE` |
-| 3 | `tag` | `VARCHAR(50)` | NO | — | Lowercase, alphanumeric + underscores |
+| 3 | `tag` | `VARCHAR(50)` | NO | — | Lowercase, alphanumeric + hyphens + underscores (`^[a-z0-9_-]+$`) |
 
 **Constraints:**
 
@@ -748,28 +747,25 @@ stateDiagram-v2
 
 ## 6. Alembic Migration Convention
 
-### 6.1 File Naming
+### 6.1 Linear Revision Chain & File Naming
 
-```
-migrations/versions/YYYYMMDD_HHMM_description.py
-```
+Migrations live in `backend/alembic/versions/` and MUST follow a strictly linear chain with 4-digit revision prefixes matching `0000_initial.py`:
 
-**Examples:**
+| Revision (`--rev-id`) | `down_revision` | Filename | Scope / Milestone |
+|---|---|---|---|
+| `0000` | `None` | `0000_initial.py` | Baseline scaffold (M0 — done) |
+| `0001` | `"0000"` | `0001_cases_and_wallets.py` | `pgcrypto`, `set_updated_at()`, `cases`, `case_tags`, `seed_wallets` (M1) |
+| `0002` | `"0001"` | `0002_transactions.py` | `transactions` cache table (M2) |
+| `0003` | `"0002"` | `0003_trace_tables.py` | `trace_edges`, `trace_nodes` (M3) |
+| `0004` | `"0003"` | `0004_vasp_tables.py` | `vasp_labels`, `vasp_candidates` (M4) |
+| `0005` | `"0004"` | `0005_action_packages.py` | `action_packages` (M5) |
 
-| Filename | Description |
-|---|---|
-| `20261124_1700_create_cases_and_seed_wallets.py` | Initial tables |
-| `20261124_1710_create_transactions_and_trace_tables.py` | Transactions, trace_edges, trace_nodes |
-| `20261124_1720_create_vasp_labels_and_candidates.py` | VASP tables |
-| `20261124_1730_create_action_packages.py` | Action package table |
-| `20261124_1740_seed_vasp_labels.py` | Seed data for known VASPs |
+### 6.2 Alembic Model Discovery & Single-Head Rule
 
-### 6.2 Alembic Configuration
-
-```python
-# alembic/env.py — file_template setting
-file_template = "%%(year)d%%(month).2d%%(day).2d_%%(hour).2d%%(minute).2d_%%(slug)s"
-```
+- Generate each migration with `--rev-id 000X` (or rename cleanly and keep `revision` / `down_revision` exact).
+- Import all ORM model modules in `backend/app/models/__init__.py` and import `app.models` in `backend/alembic/env.py` and `backend/tests/conftest.py` so `Base.metadata` discovers every table.
+- Always run `alembic heads` before opening a PR — there MUST be strictly **one** head.
+- Seed data for `vasp_labels` is loaded idempotently by `python -m app.scripts.seed_labels` (`ON CONFLICT (address, chain, source) DO NOTHING`), NOT inside schema migrations.
 
 ### 6.3 Migration Ordering
 

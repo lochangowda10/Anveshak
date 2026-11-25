@@ -117,7 +117,7 @@ A single case may have multiple seed wallets (e.g., victim sent funds to two dif
 | `block_number` | `int` | TRON block number | `58123456` |
 | `hop` | `int` | The hop level at which this edge was discovered (= source node's hop + 1) | `2` |
 | `pruned` | `bool` | `True` if this edge was dropped by a filter | `False` |
-| `pruned_reason` | `str \| None` | Filter that dropped it, or `None` | `"amount_relevance"` |
+| `prune_reason` | `str \| None` | Filter that dropped it, or `None` | `"amount_below_threshold"` |
 | `cycle_detected` | `bool` | `True` if traversal was stopped here due to cycle | `False` |
 | `incoming_tx_hash` | `str \| None` | The tx_hash of the incoming transaction that brought funds to `from_address` (for path continuity check). `None` for hop 1 edges (seed outgoing). | `"d4e5f6..."` |
 
@@ -125,7 +125,7 @@ A single case may have multiple seed wallets (e.g., victim sent funds to two dif
 
 ## 3. Pruning Filters
 
-Filters are applied **in the specified order** at each hop level for every candidate transaction. A transaction that fails **any** filter is marked `pruned=TRUE` with the corresponding `pruned_reason` and is **not traversed further** (its `to_address` is not added to the next frontier). However, the pruned edge **is still stored** in the database for auditability.
+Filters are applied **in the specified order** at each hop level for every candidate transaction. A transaction that fails **any** filter is marked `pruned=TRUE` with the corresponding `prune_reason` and is **not traversed further** (its `to_address` is not added to the next frontier). However, the pruned edge **is still stored** in the database for auditability.
 
 ### 3.1 Filter Ordering
 
@@ -139,7 +139,7 @@ Filter 6: Duplicate Removal  → graph deduplication
 ```
 
 > [!IMPORTANT]
-> Filters are applied in this exact sequence. A transaction dropped by Filter 2 is never evaluated against Filters 3–6. The `pruned_reason` records the **first** filter that rejected the transaction.
+> Filters are applied in this exact sequence. A transaction dropped by Filter 2 is never evaluated against Filters 3–6. The `prune_reason` records the **first** filter that rejected the transaction.
 
 ---
 
@@ -166,7 +166,7 @@ if current_hop > trace_config.hop_limit:
 - BFS loop runs from `hop = 1` to `hop = hop_limit` inclusive.
 - An address at `hop = hop_limit` has its outgoing transactions fetched and edges recorded, but the **recipients** (at `hop = hop_limit + 1`) are NOT added to the frontier.
 
-**`pruned_reason` value:** `"hop_limit"`
+**`prune_reason` value:** `"hop_limit"`
 
 ---
 
@@ -178,7 +178,7 @@ if current_hop > trace_config.hop_limit:
 
 | Parameter | Type | Default | Source |
 |---|---|---|---|
-| `seed_reported_amount` | `Decimal` | Extracted from `complaints.reported_amount` | Complaint record |
+| `seed_reported_amount` | `Decimal` | Extracted from `seed_wallets.reported_amount` | Complaint record |
 | Relative threshold | `Decimal` | `0.01` (1%) | Hardcoded constant |
 | Absolute minimum | `Decimal` | `10.0` USDT | Hardcoded constant |
 
@@ -193,7 +193,7 @@ else:
 
 # Apply
 if tx.amount < threshold:
-    mark pruned, reason = "amount_relevance"
+    mark pruned, reason = "amount_below_threshold"
 ```
 
 **Token normalization:**
@@ -209,7 +209,7 @@ tx.amount = 200.0 USDT → PRUNED (200 < 500)
 tx.amount = 600.0 USDT → KEPT
 ```
 
-**`pruned_reason` value:** `"amount_relevance"`
+**`prune_reason` value:** `"amount_below_threshold"`
 
 ---
 
@@ -223,13 +223,13 @@ tx.amount = 600.0 USDT → KEPT
 |---|---|---|---|---|---|
 | `trace_config.time_window_before_days` | `int` | `30` | `1` | `365` | Per-case config |
 | `trace_config.time_window_after_days` | `int` | `7` | `0` | `90` | Per-case config |
-| `complaint.reported_at` | `datetime` (UTC) | — | — | — | Complaint record |
+| `cases.reported_at` | `datetime` (UTC) | — | — | — | Complaint record |
 
 **Rule:**
 
 ```python
-window_start = complaint.reported_at - timedelta(days=trace_config.time_window_before_days)
-window_end   = complaint.reported_at + timedelta(days=trace_config.time_window_after_days)
+window_start = cases.reported_at - timedelta(days=trace_config.time_window_before_days)
+window_end   = cases.reported_at + timedelta(days=trace_config.time_window_after_days)
 
 if not (window_start <= tx.timestamp <= window_end):
     mark pruned, reason = "time_window"
@@ -242,10 +242,10 @@ if not (window_start <= tx.timestamp <= window_end):
 4. Some movement may happen after complaint filing (up to ~1 week)
 
 **Edge case — missing `reported_at`:**
-- If `complaint.reported_at` is `NULL`, fall back to `complaint.created_at` (the system timestamp when the complaint was entered).
+- If `cases.reported_at` is `NULL`, fall back to `cases.created_at` (the system timestamp when the complaint was entered).
 - If both are `NULL`, abort the trace with error code `TRACE_ERR_NO_TIMESTAMP`.
 
-**`pruned_reason` value:** `"time_window"`
+**`prune_reason` value:** `"time_window"`
 
 ---
 
@@ -282,7 +282,7 @@ if outgoing_count > trace_config.degree_cap:
 - Its **outgoing** edges are **all pruned** with `reason = "degree_cap"`.
 - The outgoing transaction count is determined **before** fetching all transaction details — use TronGrid's pagination metadata (`total` field) or count the first page results. If the count exceeds the cap, **do not fetch further pages**.
 
-**`pruned_reason` value:** `"degree_cap"`
+**`prune_reason` value:** `"degree_cap"`
 
 ---
 
@@ -327,7 +327,7 @@ if not (valid_window_start <= outgoing_tx.timestamp <= valid_window_end):
     mark pruned, reason = "path_discontinuity"
 ```
 
-**`pruned_reason` value:** `"path_discontinuity"`
+**`prune_reason` value:** `"path_discontinuity"`
 
 ---
 
@@ -372,7 +372,7 @@ if to_address already in global_visited at same hop:
 
 **Implementation note:** For MVP, the "total path amount" is approximated by looking only at the **edge amount** arriving at the address (not the full path sum), since tracking full path sums in BFS requires additional bookkeeping. This is acceptable because the highest single-edge amount is a reasonable proxy for the most significant flow.
 
-**`pruned_reason` values:** `"duplicate"` or `"duplicate"`
+**`prune_reason` values:** `"duplicate"` or `"duplicate"`
 
 ---
 
@@ -598,7 +598,7 @@ When an address fetch fails:
 | Code | Meaning | Resolution |
 |---|---|---|
 | `TRACE_ERR_NO_SEED` | No seed wallets in the case | Add seed wallets to complaint |
-| `TRACE_ERR_NO_TIMESTAMP` | `complaint.reported_at` and `complaint.created_at` are both NULL | Update complaint record |
+| `TRACE_ERR_NO_TIMESTAMP` | `cases.reported_at` and `cases.created_at` are both NULL | Update complaint record |
 | `TRACE_ERR_INVALID_ADDRESS` | Seed wallet address is not a valid TRON Base58 address | Correct the address |
 | `TRACE_ERR_TRONGRID_DOWN` | All TronGrid requests failed at hop 1 | Retry later |
 | `TRACE_ERR_FETCH_ABORT` | >50% fetch failure at a hop level | Check TronGrid status, retry |
@@ -679,50 +679,15 @@ GET  /api/v1/cases/{case_id}/trace/status  →  returns { status, progress, meta
 
 ### 8.1 Database Persistence
 
-The trace results are persisted to two tables (defined in DATABASE.md):
+The trace results are persisted to the canonical tables defined in `docs/DATA_MODEL.md` §3.5–§3.6 (`trace_nodes` and `trace_edges` — **always treat `docs/DATA_MODEL.md` as authoritative for exact SQL types, triggers, and constraints**):
 
-**`graph_nodes` table:** One row per address discovered during the trace.
-
-| Column | Type | Source |
-|---|---|---|
-| `id` | `UUID` PK | Auto-generated |
-| `case_id` | `UUID` FK | From the case being traced |
-| `address` | `VARCHAR(34)` | TRON address |
-| `hop` | `SMALLINT` | Shortest hop from seed |
-| `node_type` | `VARCHAR(20)` | `seed`, `intermediate`, `vasp_candidate`, `fetch_failed` |
-| `vasp_label` | `VARCHAR(100)` | Matched VASP name or NULL |
-| `in_degree` | `INTEGER` | Computed after pruning |
-| `out_degree` | `INTEGER` | Computed after pruning |
-| `total_inflow` | `NUMERIC(28,6)` | Sum of incoming edge amounts |
-| `total_outflow` | `NUMERIC(28,6)` | Sum of outgoing edge amounts |
-| `first_seen_at` | `TIMESTAMPTZ` | Earliest tx timestamp |
-| `degree_capped` | `BOOLEAN` | True if degree cap filter applied |
-| `created_at` | `TIMESTAMPTZ` | Row creation time |
-
-**`graph_edges` table:** One row per transaction (kept or pruned).
-
-| Column | Type | Source |
-|---|---|---|
-| `id` | `UUID` PK | Auto-generated |
-| `case_id` | `UUID` FK | From the case being traced |
-| `tx_hash` | `VARCHAR(64)` | Transaction hash |
-| `from_address` | `VARCHAR(34)` | Sender |
-| `to_address` | `VARCHAR(34)` | Receiver |
-| `amount` | `NUMERIC(28,6)` | Amount in token units |
-| `token` | `VARCHAR(10)` | `USDT` or `TRX` |
-| `token_contract` | `VARCHAR(34)` | TRC-20 contract address |
-| `timestamp` | `TIMESTAMPTZ` | Block timestamp |
-| `block_number` | `BIGINT` | TRON block number |
-| `hop` | `SMALLINT` | Hop level of this edge |
-| `pruned` | `BOOLEAN` | `FALSE` = kept, `TRUE` = dropped |
-| `pruned_reason` | `VARCHAR(30)` | Filter name or NULL |
-| `cycle_detected` | `BOOLEAN` | True if cycle edge |
-| `incoming_tx_hash` | `VARCHAR(64)` | For path continuity reference |
-| `created_at` | `TIMESTAMPTZ` | Row creation time |
+- **`trace_nodes`**: One row per address discovered during the trace (`case_id`, `address`, `chain`, `node_type` IN `('seed','intermediate','vasp_candidate','unknown')`, `hop_depth`, `in_degree`, `out_degree`, `total_received`, `total_sent`, `first_seen`, `last_seen`).
+- **`trace_edges`**: One row per transaction (`case_id`, `transaction_id`, `from_address`, `to_address`, `amount`, `token`, `timestamp`, `hop_depth`, `path_id`, `pruned`, `prune_reason`).
+- **Source timestamps & amounts**: Load `reported_at` from `cases.reported_at` and seed amounts from `seed_wallets.reported_amount`.
 
 ### 8.2 Trace Metadata Object
 
-Stored in `cases.trace_metadata` (JSONB column) after trace completion.
+Returned inside `GET /api/v1/cases/{case_id}/graph` under `"metadata"` (`API_CONTRACT.md` §2.6):
 
 ```json
 {
@@ -746,7 +711,7 @@ Stored in `cases.trace_metadata` (JSONB column) after trace completion.
   "total_kept": 83,
   "pruning_breakdown": {
     "hop_limit": 0,
-    "amount_relevance": 87,
+    "amount_below_threshold": 87,
     "time_window": 42,
     "degree_cap": 55,
     "path_discontinuity": 31,
@@ -773,81 +738,96 @@ Stored in `cases.trace_metadata` (JSONB column) after trace completion.
 
 ### 8.3 Cytoscape JSON Serialization
 
-The graph engine provides a method to serialize the pruned graph (kept edges only + cycle edges) into Cytoscape.js-compatible JSON for frontend rendering.
+The graph engine serializes the traced graph into the exact top-level shape specified in `API_CONTRACT.md` §2.6 (`nodes`, `edges`, `metadata`):
 
 ```json
 {
-  "elements": {
-    "nodes": [
-      {
-        "data": {
-          "id": "TL6NsnvPg3N7QxaLsBvHCEaBiSYrqiDNws",
-          "label": "TXrZ...5678",
-          "type": "seed",
-          "hop": 0,
-          "vasp_label": null,
-          "total_inflow": 0.0,
-          "total_outflow": 50000.0,
-          "degree_capped": false,
-          "in_degree": 0,
-          "out_degree": 3
-        }
-      },
-      {
-        "data": {
-          "id": "TQpoianDcskU3tei8gxhJzJhN1ZKz75SZ1",
-          "label": "TAbC...5678",
-          "type": "intermediate",
-          "hop": 1,
-          "vasp_label": null,
-          "total_inflow": 20000.0,
-          "total_outflow": 19500.0,
-          "degree_capped": false,
-          "in_degree": 1,
-          "out_degree": 2
-        }
-      },
-      {
-        "data": {
-          "id": "TVKGjmUx73nc4EX1pNg8c3AnN8vSZqGgnU",
-          "label": "THot...678X",
-          "type": "vasp_candidate",
-          "hop": 2,
-          "vasp_label": "Binance",
-          "total_inflow": 15000.0,
-          "total_outflow": 0.0,
-          "degree_capped": true,
-          "in_degree": 2,
-          "out_degree": 0
-        }
+  "nodes": [
+    {
+      "data": {
+        "id": "TL6NsnvPg3N7QxaLsBvHCEaBiSYrqiDNws",
+        "label": "TL6N...DNws",
+        "type": "seed",
+        "hop_depth": 0,
+        "in_degree": 0,
+        "out_degree": 3,
+        "total_received": 0.0,
+        "total_sent": 50000.0,
+        "vasp_label": null,
+        "vasp_confidence": null
       }
-    ],
-    "edges": [
-      {
-        "data": {
-          "id": "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2",
-          "source": "TL6NsnvPg3N7QxaLsBvHCEaBiSYrqiDNws",
-          "target": "TQpoianDcskU3tei8gxhJzJhN1ZKz75SZ1",
-          "amount": 20000.0,
-          "token": "USDT",
-          "timestamp": "2026-10-16T14:22:00Z",
-          "hop": 1,
-          "cycle_detected": false
-        }
-      },
-      {
-        "data": {
-          "id": "b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3",
-          "source": "TQpoianDcskU3tei8gxhJzJhN1ZKz75SZ1",
-          "target": "TVKGjmUx73nc4EX1pNg8c3AnN8vSZqGgnU",
-          "amount": 15000.0,
-          "token": "USDT",
-          "timestamp": "2026-10-16T15:03:00Z",
-          "hop": 2,
-          "cycle_detected": false
-        }
+    },
+    {
+      "data": {
+        "id": "TQpoianDcskU3tei8gxhJzJhN1ZKz75SZ1",
+        "label": "TQpo...5SZ1",
+        "type": "intermediate",
+        "hop_depth": 1,
+        "in_degree": 1,
+        "out_degree": 2,
+        "total_received": 20000.0,
+        "total_sent": 19500.0,
+        "vasp_label": null,
+        "vasp_confidence": null
       }
-    ]
+    },
+    {
+      "data": {
+        "id": "TVKGjmUx73nc4EX1pNg8c3AnN8vSZqGgnU",
+        "label": "TVKG...GgnU",
+        "type": "vasp_candidate",
+        "hop_depth": 2,
+        "in_degree": 2,
+        "out_degree": 0,
+        "total_received": 15000.0,
+        "total_sent": 0.0,
+        "vasp_label": "Binance",
+        "vasp_confidence": 0.88
+      }
+    }
+  ],
+  "edges": [
+    {
+      "data": {
+        "id": "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2",
+        "source": "TL6NsnvPg3N7QxaLsBvHCEaBiSYrqiDNws",
+        "target": "TQpoianDcskU3tei8gxhJzJhN1ZKz75SZ1",
+        "amount": 20000.0,
+        "token": "USDT",
+        "timestamp": "2026-10-16T14:22:00Z",
+        "hop_depth": 1,
+        "pruned": false,
+        "prune_reason": null
+      }
+    },
+    {
+      "data": {
+        "id": "b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3",
+        "source": "TQpoianDcskU3tei8gxhJzJhN1ZKz75SZ1",
+        "target": "TVKGjmUx73nc4EX1pNg8c3AnN8vSZqGgnU",
+        "amount": 15000.0,
+        "token": "USDT",
+        "timestamp": "2026-10-16T15:03:00Z",
+        "hop_depth": 2,
+        "pruned": false,
+        "prune_reason": null
+      }
+    }
+  ],
+  "metadata": {
+    "total_fetched": 48,
+    "total_pruned": 25,
+    "pruning_breakdown": {
+      "hop_limit": 12,
+      "amount_below_threshold": 8,
+      "time_window": 3,
+      "degree_cap": 1,
+      "path_discontinuity": 0,
+      "duplicate": 1
+    },
+    "cycles_detected": 0,
+    "fetch_failures": 0,
+    "elapsed_seconds": 4.21
   }
 }
 ```
@@ -923,7 +903,7 @@ class TraceContext:
     api_call_count: int = 0
     fetch_failures: int = 0
     pruning_counts: dict[str, int] = field(default_factory=lambda: {
-        "hop_limit": 0, "amount_relevance": 0, "time_window": 0,
+        "hop_limit": 0, "amount_below_threshold": 0, "time_window": 0,
         "degree_cap": 0, "path_discontinuity": 0, "duplicate": 0
     })
     cycles: list[dict] = field(default_factory=list)
@@ -940,13 +920,12 @@ async def run_trace(case_id: str, db: Database) -> TraceResult:
     # STEP 0: Load case and complaint data
     # -----------------------------------------------------------------------
     case = await db.get_case(case_id)
-    complaint = await db.get_complaint(case.complaint_id)
-    seed_wallets = await db.get_seed_wallets(case_id)
+        seed_wallets = await db.get_seed_wallets(case_id)
 
     if not seed_wallets:
         raise TraceError("TRACE_ERR_NO_SEED")
 
-    reported_at = complaint.reported_at or complaint.created_at
+    reported_at = cases.reported_at or cases.created_at
     if reported_at is None:
         raise TraceError("TRACE_ERR_NO_TIMESTAMP")
 
@@ -972,7 +951,7 @@ async def run_trace(case_id: str, db: Database) -> TraceResult:
     window_end = reported_at + timedelta(days=config.time_window_after_days)
 
     # Compute amount threshold
-    reported_amount = complaint.reported_amount  # Decimal or None
+    reported_amount = sum(sw.reported_amount or Decimal('0') for sw in seed_wallets)  # Decimal or None
     if reported_amount and reported_amount > 0:
         amount_threshold = max(reported_amount * AMOUNT_RELEVANCE_PERCENT, AMOUNT_ABSOLUTE_MIN)
     else:
@@ -1119,7 +1098,7 @@ async def run_trace(case_id: str, db: Database) -> TraceResult:
                 for tx in outgoing_txs:
                     edge_data = parse_transaction(tx, current_hop, trx_usdt_rate)
                     edge_data["pruned"] = True
-                    edge_data["pruned_reason"] = "degree_cap"
+                    edge_data["prune_reason"] = "degree_cap"
                     await db.insert_graph_edge(ctx.case_id, edge_data)
                     ctx.pruning_counts["degree_cap"] += 1
                 continue  # Skip to next address in frontier
@@ -1128,22 +1107,22 @@ async def run_trace(case_id: str, db: Database) -> TraceResult:
             for tx in outgoing_txs:
                 edge_data = parse_transaction(tx, current_hop, trx_usdt_rate)
                 pruned = False
-                pruned_reason = None
+                prune_reason = None
 
                 # FILTER 2: Amount Relevance
                 if not pruned:
                     usdt_amount = normalize_to_usdt(edge_data["amount"], edge_data["token"], trx_usdt_rate)
                     if usdt_amount < amount_threshold:
                         pruned = True
-                        pruned_reason = "amount_relevance"
-                        ctx.pruning_counts["amount_relevance"] += 1
+                        prune_reason = "amount_below_threshold"
+                        ctx.pruning_counts["amount_below_threshold"] += 1
 
                 # FILTER 3: Time Window
                 if not pruned:
                     tx_ts = edge_data["timestamp"]
                     if not (window_start <= tx_ts <= window_end):
                         pruned = True
-                        pruned_reason = "time_window"
+                        prune_reason = "time_window"
                         ctx.pruning_counts["time_window"] += 1
 
                 # FILTER 5: Path Continuity (only for hop >= 2)
@@ -1156,7 +1135,7 @@ async def run_trace(case_id: str, db: Database) -> TraceResult:
                         cont_end = latest_in + timedelta(hours=PATH_CONTINUITY_HOURS)
                         if not (cont_start <= edge_data["timestamp"] <= cont_end):
                             pruned = True
-                            pruned_reason = "path_discontinuity"
+                            prune_reason = "path_discontinuity"
                             ctx.pruning_counts["path_discontinuity"] += 1
 
                 # FILTER 6: Duplicate Removal
@@ -1167,7 +1146,7 @@ async def run_trace(case_id: str, db: Database) -> TraceResult:
                         if existing_hop <= current_hop:
                             # Existing is at same or shorter path — prune current
                             pruned = True
-                            pruned_reason = "duplicate"
+                            prune_reason = "duplicate"
                             ctx.pruning_counts["duplicate"] += 1
                         else:
                             # Current path is shorter — prune old, keep new
@@ -1188,19 +1167,19 @@ async def run_trace(case_id: str, db: Database) -> TraceResult:
                                 best_existing_amount = max(e[2]["amount"] for e in existing_edges)
                                 if edge_data["amount"] <= best_existing_amount:
                                     pruned = True
-                                    pruned_reason = "duplicate"
+                                    prune_reason = "duplicate"
                                     ctx.pruning_counts["duplicate"] += 1
                                 else:
                                     # Current edge has higher amount — prune old
                                     for e in existing_edges:
                                         ctx.graph.edges[e[0], e[1]]["pruned"] = True
-                                        ctx.graph.edges[e[0], e[1]]["pruned_reason"] = "duplicate"
+                                        ctx.graph.edges[e[0], e[1]]["prune_reason"] = "duplicate"
                                         await db.mark_edge_pruned(ctx.case_id, e[2]["tx_hash"], "duplicate")
                                     ctx.pruning_counts["duplicate"] += len(existing_edges)
 
                 # --- Record edge ---
                 edge_data["pruned"] = pruned
-                edge_data["pruned_reason"] = pruned_reason
+                edge_data["prune_reason"] = prune_reason
 
                 if pruned:
                     await db.insert_graph_edge(ctx.case_id, edge_data)
@@ -1369,8 +1348,12 @@ def build_trace_result(ctx: TraceContext, status: str, start_time: datetime) -> 
     )
 
 
-def build_cytoscape_json(graph: nx.DiGraph) -> dict:
-    """Serialize the graph into Cytoscape.js JSON format."""
+def build_cytoscape_json(
+    graph: nx.DiGraph,
+    metadata: dict | None = None,
+    include_pruned: bool = False,
+) -> dict:
+    """Serialize the graph into the API_CONTRACT §2.6 Cytoscape JSON format."""
     nodes = []
     for addr, data in graph.nodes(data=True):
         nodes.append({
@@ -1378,20 +1361,21 @@ def build_cytoscape_json(graph: nx.DiGraph) -> dict:
                 "id": addr,
                 "label": short_label(addr),
                 "type": data.get("node_type", "intermediate"),
-                "hop": data.get("hop", 0),
-                "vasp_label": data.get("vasp_label"),
-                "total_inflow": float(data.get("total_inflow", 0)),
-                "total_outflow": float(data.get("total_outflow", 0)),
-                "degree_capped": data.get("degree_capped", False),
+                "hop_depth": data.get("hop", 0),
                 "in_degree": data.get("in_degree", 0),
                 "out_degree": data.get("out_degree", 0),
+                "total_received": float(data.get("total_inflow", 0)),
+                "total_sent": float(data.get("total_outflow", 0)),
+                "vasp_label": data.get("vasp_label"),
+                "vasp_confidence": data.get("vasp_confidence"),
             }
         })
 
     edges = []
     for src, dst, data in graph.edges(data=True):
-        if data.get("pruned", False):
-            continue  # Only include kept edges (and cycle edges)
+        is_pruned = data.get("pruned", False)
+        if is_pruned and not include_pruned:
+            continue
         edges.append({
             "data": {
                 "id": data["tx_hash"],
@@ -1400,12 +1384,13 @@ def build_cytoscape_json(graph: nx.DiGraph) -> dict:
                 "amount": float(data["amount"]),
                 "token": data["token"],
                 "timestamp": data["timestamp"].isoformat() + "Z" if isinstance(data["timestamp"], datetime) else data["timestamp"],
-                "hop": data["hop"],
-                "cycle_detected": data.get("cycle_detected", False),
+                "hop_depth": data["hop"],
+                "pruned": is_pruned,
+                "prune_reason": data.get("prune_reason"),
             }
         })
 
-    return {"elements": {"nodes": nodes, "edges": edges}}
+    return {"nodes": nodes, "edges": edges, "metadata": metadata}
 
 
 def short_label(address: str) -> str:
@@ -1442,7 +1427,7 @@ def parse_transaction(raw_tx: dict, hop: int, trx_usdt_rate: Decimal) -> dict:
         "block_number": raw_tx.get("block", 0),
         "hop": hop,
         "pruned": False,
-        "pruned_reason": None,
+        "prune_reason": None,
         "cycle_detected": False,
         "incoming_tx_hash": None,  # Set by caller for path continuity
     }
@@ -1612,22 +1597,21 @@ Cycles detected: 2
 Fetch failures: 0
 ```
 
-### Cytoscape Output (excerpt)
+### Cytoscape Output (abbreviated illustrative excerpt — see `API_CONTRACT.md` §2.6 for full schema)
 
 ```json
 {
-  "elements": {
-    "nodes": [
-      {"data": {"id": "TSeed...A", "label": "TSee...111A", "type": "seed", "hop": 0, "vasp_label": null}},
-      {"data": {"id": "TAddr...B", "label": "TAdd...rB", "type": "intermediate", "hop": 1, "vasp_label": null}},
-      {"data": {"id": "TAddr...C", "label": "TAdd...rC", "type": "vasp_candidate", "hop": 1, "vasp_label": null}},
-      {"data": {"id": "TBinance", "label": "TBin...nce", "type": "vasp_candidate", "hop": 3, "vasp_label": "Binance"}}
-    ],
-    "edges": [
-      {"data": {"id": "tx1", "source": "TSeed...A", "target": "TAddr...B", "amount": 20000.0, "token": "USDT", "timestamp": "2026-10-18T10:00:00Z", "hop": 1, "cycle_detected": false}},
-      {"data": {"id": "tx9", "source": "TAddr...D", "target": "TSeed...A", "amount": 500.0, "token": "USDT", "timestamp": "2026-10-18T14:30:00Z", "hop": 2, "cycle_detected": true}}
-    ]
-  }
+  "nodes": [
+    {"data": {"id": "TSeed...A", "label": "TSee...111A", "type": "seed", "hop_depth": 0, "vasp_label": null}},
+    {"data": {"id": "TAddr...B", "label": "TAdd...rB", "type": "intermediate", "hop_depth": 1, "vasp_label": null}},
+    {"data": {"id": "TAddr...C", "label": "TAdd...rC", "type": "vasp_candidate", "hop_depth": 1, "vasp_label": null}},
+    {"data": {"id": "TBinance", "label": "TBin...nce", "type": "vasp_candidate", "hop_depth": 3, "vasp_label": "Binance"}}
+  ],
+  "edges": [
+    {"data": {"id": "tx1", "source": "TSeed...A", "target": "TAddr...B", "amount": 20000.0, "token": "USDT", "timestamp": "2026-10-18T10:00:00Z", "hop_depth": 1, "pruned": false, "prune_reason": null}},
+    {"data": {"id": "tx9", "source": "TAddr...D", "target": "TSeed...A", "amount": 500.0, "token": "USDT", "timestamp": "2026-10-18T14:30:00Z", "hop_depth": 2, "pruned": false, "prune_reason": null}}
+  ],
+  "metadata": {"total_fetched": 160, "total_pruned": 152, "cycles_detected": 2}
 }
 ```
 

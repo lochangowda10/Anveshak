@@ -296,7 +296,7 @@
     {
       "data": {
         "id": "TFNyk1vSQ82XBvvboW7mLBtneeDToVt1KW",
-        "label": "TN2YqTv7...kuGM",
+        "label": "TFNy...t1KW",
         "type": "seed",
         "hop_depth": 0,
         "in_degree": 1,
@@ -310,7 +310,7 @@
     {
       "data": {
         "id": "TNgEDH3RhWAWm7yBDmJgwWBZiGkjEnFaK7",
-        "label": "TWazirXd...3456",
+        "label": "TNgE...FaK7",
         "type": "vasp_candidate",
         "hop_depth": 2,
         "in_degree": 142,

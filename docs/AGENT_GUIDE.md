@@ -64,7 +64,7 @@ Use this template for every AI coding task:
 |----------|-------------|------------|
 | Two agents edit `models.py` | Merge conflict, lost work | OWNERSHIP.md — one owner per file |
 | Agent A creates interface, Agent B uses it | Type mismatch | Define interface in API_CONTRACT.md first |
-| Agent generates DB migration | Conflicts with another migration | Only DB owner runs `alembic revision` |
+| Agent generates DB migration | Multiple Alembic heads break CI | Follow sequential IDs `0001`–`0005` (`docs/DECISIONS.md` §9) and verify `alembic heads` after rebase |
 
 ### 5. Review Checklist for AI-Generated Code
 

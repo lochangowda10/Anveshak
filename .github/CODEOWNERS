@@ -1,0 +1,36 @@
+# ANVESHAK Code Owners (5-Developer Track Model + Team Lead Release Gate)
+# Reference: OWNERSHIP.md
+
+# Global governance, specs & CI — Team Lead review required
+*                                       @lochangowda10
+/.github/                               @lochangowda10
+/docs/                                  @lochangowda10
+/backend/app/main.py                    @lochangowda10
+/backend/app/core/                      @lochangowda10
+/backend/alembic/                       @lochangowda10
+
+# Track 1: Case Intake & Core Schemas (M1)
+/backend/app/models/case.py             @lochangowda10
+/backend/app/api/routes/cases.py        @lochangowda10
+/backend/app/api/schemas/case.py        @lochangowda10
+
+# Track 2: TRON Adapter & Graph Engine (M0, M2, M3)
+/backend/app/services/chain/            @lochangowda10
+/backend/app/services/graph/            @lochangowda10
+/backend/app/models/transaction.py      @lochangowda10
+/backend/app/models/trace.py            @lochangowda10
+/backend/app/api/routes/trace.py        @lochangowda10
+
+# Track 3: VASP Attribution, Ranking & Evidence/PDF (M4, M5)
+/backend/app/services/attribution/      @lochangowda10
+/backend/app/services/ranking/          @lochangowda10
+/backend/app/services/evidence/         @lochangowda10
+/backend/app/models/label.py            @lochangowda10
+/backend/app/models/candidate.py        @lochangowda10
+/backend/app/models/action_package.py   @lochangowda10
+/backend/app/scripts/seed_labels.py     @lochangowda10
+
+# Track 4 & Track 5: Frontend & E2E QA (M6, M7, M8)
+/frontend/                              @lochangowda10
+/backend/tests/e2e/                     @lochangowda10
+/backend/app/scripts/seed_demo.py       @lochangowda10

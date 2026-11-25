@@ -17,7 +17,7 @@ authoritative reference for the ranking engine implementation.
 VASP labels come from four source tiers. Each tier has a fixed **confidence
 base** that acts as the ceiling for `label_match_score` when matching addresses.
 
-| Priority | `source` Value | Type | `confidence_base` | Description | MVP Status |
+| Priority | `source` Value | Type | Default `confidence` | Description | MVP Status |
 |----------|---------------|------|-------------------|-------------|------------|
 | 1 | `agency` | Internal | `0.95` | Law enforcement intelligence feeds; manually verified by investigating officers. | ⚠️ Manual-entry only (via Human Review) |
 | 2 | `licensed` | Commercial | `0.85` | Licensed commercial data (e.g., Chainalysis Reactor, Elliptic Lens feed). | ❌ Phase 2 |
@@ -40,14 +40,14 @@ the following matching rules **in order**. The first match that succeeds is used
 ### 2.1 Exact Match (MVP)
 
 ```
-1. Query: SELECT * FROM vasp_labels WHERE address = :address ORDER BY confidence_base DESC, updated_at DESC LIMIT 1
+1. Query: SELECT * FROM vasp_labels WHERE address = :address AND chain = :chain ORDER BY confidence DESC, updated_at DESC LIMIT 1
 2. If row found → label_match_score = 1.0
-3. Use row.label_name, row.vasp_type, row.source, row.confidence_base
+3. Use row.label, row.label_type, row.source, row.confidence
 ```
 
-**Table:** `vasp_labels` \
-**Lookup Key:** `address` (case-sensitive, TRON base58 format) \
-**Tie-break:** Highest `confidence_base` first, then most recent `updated_at`.
+**Table:** `vasp_labels` (see `docs/DATA_MODEL.md` §3.7) \
+**Lookup Key:** `(address, chain)` (case-sensitive, TRON base58 format) \
+**Tie-break:** Highest `confidence` first, then most recent `updated_at`.
 
 ### 2.2 Cluster Match (Phase 2 — Not in MVP)
 
@@ -410,56 +410,7 @@ class ScoringBreakdown:
 
 ### 4.4 API Response Format
 
-**Endpoint:** `GET /api/v1/cases/{case_id}/candidates`
-
-```json
-{
-  "case_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-  "generated_at": "2026-11-24T17:00:00Z",
-  "seed_reported_amount": 50000.00,
-  "seed_token": "USDT",
-  "weights_used": {
-    "label_match": 0.35,
-    "hop_depth": 0.15,
-    "amount_relevance": 0.20,
-    "time_gap": 0.10,
-    "path_continuity": 0.10,
-    "degree_fanout": 0.10
-  },
-  "candidates_count": 3,
-  "candidates": [
-    {
-      "rank": 1,
-      "address": "THb8E3EMsC9xU6bMNWQsr83dFfBEDSfXGg",
-      "chain": "TRON",
-      "label": "WazirX",
-      "label_source": "public",
-      "confidence": 0.90,
-      "hop_depth": 2,
-      "amount_received": 35000.00,
-      "scoring_breakdown": {
-        "label_match_score": 1.0,
-        "hop_depth_score": 0.75,
-        "amount_relevance_score": 0.70,
-        "time_gap_score": 0.99,
-        "path_continuity_score": 1.0,
-        "degree_fanout_score": 1.0,
-        "label_match_weighted": 0.35,
-        "hop_depth_weighted": 0.1125,
-        "amount_relevance_weighted": 0.14,
-        "time_gap_weighted": 0.099,
-        "path_continuity_weighted": 0.10,
-        "degree_fanout_weighted": 0.10
-      },
-      "alternative_labels": [],
-      "evidence_paths": ["path_001", "path_003"],
-      "review_status": "pending",
-      "reviewed_by": null,
-      "reviewed_at": null
-    }
-  ]
-}
-```
+> **Authoritative Wire Schema:** Conform strictly to `docs/API_CONTRACT.md` §2.7 (`GET /api/v1/cases/{case_id}/candidates`, returning `case_id`, `candidates` list, and `total`), with `scoring_breakdown` containing the 6 float scores: `label_match_score`, `hop_depth_score`, `amount_relevance_score`, `time_gap_score`, `path_continuity_score`, `degree_fanout_score`, plus `evidence_path_ids` and `alternative_labels`.
 
 ---
 
@@ -472,15 +423,15 @@ following resolution rules:
 
 ```
 Step 1: Group all labels for the address from vasp_labels table.
-Step 2: Sort by confidence_base DESC.
-Step 3: If tie on confidence_base → sort by updated_at DESC (most recent wins).
+Step 2: Sort by confidence DESC.
+Step 3: If tie on confidence → sort by updated_at DESC (most recent wins).
 Step 4: The top-sorted label becomes the PRIMARY label (used for display, scoring).
 Step 5: All remaining labels are stored in alternative_labels array.
 ```
 
 ### 5.2 Source Priority Table
 
-| Priority | Source | `confidence_base` | Wins over |
+| Priority | Source | `confidence` Base | Wins over |
 |----------|--------|-------------------|-----------|
 | 1 | `agency` | `0.95` | All others |
 | 2 | `licensed` | `0.85` | `public`, `heuristic` |
@@ -492,608 +443,94 @@ Step 5: All remaining labels are stored in alternative_labels array.
 ```python
 @dataclass
 class AlternativeLabel:
-    label_name: str          # e.g., "Binance" or "Suspected Exchange (Sweep)"
+    label: str               # e.g., "Binance" or "Suspected Exchange (Sweep)"
     source: str              # "agency" | "licensed" | "public" | "heuristic"
-    confidence_base: float   # 0.95 | 0.85 | 0.60 | 0.40
+    confidence: float        # 0.95 | 0.85 | 0.60 | 0.40
     updated_at: str          # ISO 8601
-    added_by: str | None     # Officer ID if source == "agency"
 ```
 
 ### 5.4 Example
 
-Address `TXyz...` has three labels:
+Address `TFNyk1vSQ82XBvvboW7mLBtneeDToVt1KW` has three labels:
 
-| Label | Source | `confidence_base` | `updated_at` |
-|-------|--------|--------------------|-------------|
+| Label | Source | `confidence` | `updated_at` |
+|-------|--------|--------------|-------------|
 | "WazirX Hot Wallet" | `public` | `0.60` | 2026-10-01T00:00:00Z |
 | "Suspected Exchange" | `heuristic` | `0.40` | 2026-11-20T12:00:00Z |
 | "WazirX Deposit" | `agency` | `0.95` | 2026-11-22T14:30:00Z |
 
 **Result:**
-- Primary label: `"WazirX Deposit"` (source=`agency`, confidence_base=`0.95`)
+- Primary label: `"WazirX Deposit"` (`source="agency"`, `confidence=0.95`)
 - `label_match_score`: `1.0` (exact match)
-- `alternative_labels`: `["WazirX Hot Wallet" (public), "Suspected Exchange" (heuristic)]`
+- `alternative_labels`: `[{"label": "WazirX Hot Wallet", "source": "public", "confidence": 0.60}, ...]`
 
 ---
 
 ## 6. Human Review Flow (MVP)
 
-### 6.1 Review Actions
+### 6.1 Review Actions & Manual Labels
 
-The investigating officer can perform three actions on each VASP candidate:
+Investigating officers review candidates via `API_CONTRACT.md` §2.8 and add manual intelligence labels via `API_CONTRACT.md` §2.12:
 
-| Action | `review_status` | Effect |
-|--------|-----------------|--------|
-| **Accept** | `"accepted"` | Candidate proceeds to evidence packaging. No data modification. |
-| **Reject** | `"rejected"` | Candidate is excluded from the action package PDF/JSON export. Remains visible in UI with strikethrough styling. |
-| **Add Manual Label** | N/A (creates new label) | Officer provides a label name and optional notes. Creates a new `vasp_labels` row with `source='agency'`, `confidence_base=0.95`. Triggers re-scoring of the candidate. |
+| Action | API Endpoint | Effect |
+|--------|--------------|--------|
+| **Accept Candidate** | `POST /api/v1/cases/{case_id}/candidates/{candidate_id}/review` | Sets `review_status = "accepted"`, saves `review_notes`. Candidate is included in Action Package export. |
+| **Reject Candidate** | `POST /api/v1/cases/{case_id}/candidates/{candidate_id}/review` | Sets `review_status = "rejected"`, saves `review_notes`. Candidate is excluded from default Action Package export. |
+| **Reset to Pending** | `POST /api/v1/cases/{case_id}/candidates/{candidate_id}/review` | Sets `review_status = "pending"`. |
+| **Add Manual Agency Label** | `POST /api/v1/labels` | Inserts a row into `vasp_labels` (e.g., `source="agency"`, `confidence=0.95`). |
 
-### 6.2 Review API
+### 6.2 Review Request & Response (`API_CONTRACT.md` §2.8)
 
-**Endpoint:** `PATCH /api/v1/cases/{case_id}/candidates/{address}/review`
+**Endpoint:** `POST /api/v1/cases/{case_id}/candidates/{candidate_id}/review`
 
 **Request Body:**
-
 ```json
 {
-  "action": "accept | reject | add_label",
-  "label_name": "string (required if action == add_label)",
-  "notes": "string (optional — officer's reasoning)"
+  "decision": "accepted",
+  "notes": "Confirmed WazirX hot wallet deposit address."
 }
 ```
+- `decision`: `"accepted" | "rejected" | "pending"` (required)
+- `notes`: `string | null` (optional, max 2000 chars, persisted to `vasp_candidates.review_notes`)
 
-**Validation Rules:**
-
-| Field | Type | Constraints |
-|-------|------|-------------|
-| `action` | `string` | Enum: `"accept"`, `"reject"`, `"add_label"`. Required. |
-| `label_name` | `string` | Required if `action == "add_label"`. Min length: 2. Max length: 100. |
-| `notes` | `string` | Optional. Max length: 500. |
-
-**Response:** `200 OK`
-
-```json
-{
-  "address": "THb8E3EMsC9xU6bMNWQsr83dFfBEDSfXGg",
-  "review_status": "accepted",
-  "reviewed_by": "officer_12345",
-  "reviewed_at": "2026-11-24T17:30:00Z",
-  "confidence": 0.90,
-  "label": "WazirX",
-  "message": "Candidate accepted for evidence packaging."
-}
-```
+**Response (`200 OK`):** Updated candidate object (`rank`, `address`, `chain`, `label`, `label_source`, `confidence`, `review_status`, `scoring_breakdown`, `evidence_path_ids`).
 
 **Error Responses:**
-
-| Code | Condition | Body |
-|------|-----------|------|
-| `404` | Case or candidate address not found | `{"error": "CANDIDATE_NOT_FOUND", "detail": "Address T... is not a ranked candidate for case {case_id}"}` |
-| `422` | Missing `label_name` when `action == "add_label"` | `{"error": "LABEL_NAME_REQUIRED", "detail": "label_name is required when action is add_label"}` |
-| `409` | Candidate already reviewed (idempotent for same action, conflict for different) | `{"error": "ALREADY_REVIEWED", "detail": "Candidate was previously rejected. PATCH again to override."}` |
+- `404 Not Found`: `{"detail": "Candidate not found"}` (or `"Case not found"`)
+- `422 Unprocessable Entity`: Invalid `decision` value.
 
 ### 6.3 MVP Behavior
 
-- Accept/reject is tracked in the database but **not enforced** as a gate.
-- All candidates (including rejected) are visible in the UI.
-- The action package export (`GET /api/v1/cases/{id}/action-package`) **excludes**
-  rejected candidates by default. Query param `?include_rejected=true` overrides.
-- Re-review is allowed: a second PATCH overwrites the previous review status.
-
-### 6.4 Audit Trail
-
-Every review action is logged to the `review_audit_log` table:
-
-```sql
-CREATE TABLE review_audit_log (
-    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    case_id         UUID NOT NULL REFERENCES cases(id),
-    address         VARCHAR(34) NOT NULL,
-    action          VARCHAR(20) NOT NULL,  -- 'accept' | 'reject' | 'add_label'
-    label_name      VARCHAR(100),
-    notes           VARCHAR(500),
-    officer_id      VARCHAR(50) NOT NULL,
-    performed_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
-    previous_status VARCHAR(20)            -- status before this action
-);
-
-CREATE INDEX idx_review_audit_case ON review_audit_log(case_id);
-CREATE INDEX idx_review_audit_address ON review_audit_log(address);
-```
+- Accept/reject updates `vasp_candidates.review_status` and `review_notes` in PostgreSQL.
+- All candidates (including rejected) remain visible in the Candidates tab.
+- Action package generation (`ACTION_PACKAGE_SPEC.md` §3) filters out `review_status == "rejected"` candidates by default.
+- Re-review is allowed: calling `POST .../review` again overwrites `review_status` and `review_notes`.
 
 ---
 
-## 7. Seed Label Data
+## 7. Authoritative Schema & Seed Data
 
-The following entries are loaded into the `vasp_labels` table on first
-deployment via an Alembic data migration. All entries use `source = 'public'`
-and `confidence_base = 0.60`.
+> [!IMPORTANT]
+> **Single Source of Truth:** `docs/DATA_MODEL.md` (§3.7 `vasp_labels`, §3.8 `vasp_candidates`, and §7 Seed Data) is the authoritative SQL schema and 20-row seed label dataset. Do NOT create separate tables such as `review_audit_log` or duplicate DDL columns like `label_name`/`vasp_type`/`confidence_base`.
 
-### 7.1 Database Schema
-
-```sql
-CREATE TABLE vasp_labels (
-    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    address         VARCHAR(34) NOT NULL,       -- TRON base58check address
-    chain           VARCHAR(10) NOT NULL DEFAULT 'TRON',
-    label_name      VARCHAR(100) NOT NULL,       -- Human-readable VASP name
-    vasp_type       VARCHAR(30) NOT NULL,        -- 'exchange' | 'dex' | 'mixer' | 'otc' | 'payment' | 'unknown'
-    source          VARCHAR(20) NOT NULL,        -- 'agency' | 'licensed' | 'public' | 'heuristic'
-    confidence_base FLOAT NOT NULL,              -- 0.0 – 1.0
-    country         VARCHAR(3),                  -- ISO 3166-1 alpha-2 (e.g., 'IN', 'KY')
-    website         VARCHAR(200),
-    notes           VARCHAR(500),
-    added_by        VARCHAR(50),                 -- officer_id if source='agency', else 'system'
-    created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
-    updated_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
-
-    CONSTRAINT uq_vasp_label_address_source UNIQUE (address, source),
-    CONSTRAINT chk_confidence CHECK (confidence_base >= 0.0 AND confidence_base <= 1.0),
-    CONSTRAINT chk_source CHECK (source IN ('agency', 'licensed', 'public', 'heuristic'))
-);
-
-CREATE INDEX idx_vasp_labels_address ON vasp_labels(address);
-CREATE INDEX idx_vasp_labels_label ON vasp_labels(label_name);
-CREATE INDEX idx_vasp_labels_source ON vasp_labels(source);
-```
-
-### 7.2 Seed Data
-
-```python
-VASP_SEED_DATA: list[dict] = [
-    # ─── Indian Exchanges ───────────────────────────────────────────────
-    {
-        "address": "THb8E3EMsC9xU6bMNWQsr83dFfBEDSfXGg",
-        "chain": "TRON",
-        "label_name": "WazirX",
-        "vasp_type": "exchange",
-        "source": "public",
-        "confidence_base": 0.60,
-        "country": "IN",
-        "website": "https://wazirx.com",
-        "notes": "Major Indian exchange; known TRON hot wallet",
-        "added_by": "system",
-    },
-    {
-        "address": "TG4321sP6jYt82gT5moUYu7qtGnBH4N6Vz",
-        "chain": "TRON",
-        "label_name": "WazirX (Deposit)",
-        "vasp_type": "exchange",
-        "source": "public",
-        "confidence_base": 0.60,
-        "country": "IN",
-        "website": "https://wazirx.com",
-        "notes": "WazirX deposit aggregation address",
-        "added_by": "system",
-    },
-    {
-        "address": "TYASr5UV6HEcXatwdFQfmLVUqQQQMUxHLS",
-        "chain": "TRON",
-        "label_name": "CoinDCX",
-        "vasp_type": "exchange",
-        "source": "public",
-        "confidence_base": 0.60,
-        "country": "IN",
-        "website": "https://coindcx.com",
-        "notes": "Indian exchange; TRON hot wallet",
-        "added_by": "system",
-    },
-    {
-        "address": "TMzrBhURf7uwa1p9kC826PknhjEXdU5zC8",
-        "chain": "TRON",
-        "label_name": "ZebPay",
-        "vasp_type": "exchange",
-        "source": "public",
-        "confidence_base": 0.60,
-        "country": "IN",
-        "website": "https://zebpay.com",
-        "notes": "One of the oldest Indian exchanges",
-        "added_by": "system",
-    },
-    {
-        "address": "TJ9Q61Nen6FZdQh7sEArinAyLvyfRpvocd",
-        "chain": "TRON",
-        "label_name": "Giottus",
-        "vasp_type": "exchange",
-        "source": "public",
-        "confidence_base": 0.60,
-        "country": "IN",
-        "website": "https://giottus.com",
-        "notes": "Indian exchange; TRON deposit address",
-        "added_by": "system",
-    },
-    {
-        "address": "TMYuxZNwCoqMaEVxketJnRCGA6G2ydp1dV",
-        "chain": "TRON",
-        "label_name": "CoinSwitch",
-        "vasp_type": "exchange",
-        "source": "public",
-        "confidence_base": 0.60,
-        "country": "IN",
-        "website": "https://coinswitch.co",
-        "notes": "Indian aggregator exchange; TRON address",
-        "added_by": "system",
-    },
-    {
-        "address": "TSjFVUNnYzQRGVtrxPEm5LNS6Settdn9vN",
-        "chain": "TRON",
-        "label_name": "BuyUCoin",
-        "vasp_type": "exchange",
-        "source": "public",
-        "confidence_base": 0.60,
-        "country": "IN",
-        "website": "https://buyucoin.com",
-        "notes": "Indian exchange; TRON wallet",
-        "added_by": "system",
-    },
-    {
-        "address": "TJPH3e6XJfg8NbSh7tm65sELn6Woqzrexy",
-        "chain": "TRON",
-        "label_name": "UnoCoin",
-        "vasp_type": "exchange",
-        "source": "public",
-        "confidence_base": 0.60,
-        "country": "IN",
-        "website": "https://unocoin.com",
-        "notes": "Indian exchange; TRON deposit address",
-        "added_by": "system",
-    },
-    # ─── Global Exchanges ───────────────────────────────────────────────
-    {
-        "address": "TKzxdSv2FZKQrEqkKVgp5DcwEXBEKMg2Ax",
-        "chain": "TRON",
-        "label_name": "Binance",
-        "vasp_type": "exchange",
-        "source": "public",
-        "confidence_base": 0.60,
-        "country": "KY",
-        "website": "https://binance.com",
-        "notes": "Binance TRON hot wallet; largest global CEX",
-        "added_by": "system",
-    },
-    {
-        "address": "TNaRAoLUyYEV2uF7GUrzSjRQTU8v5ZJ5VR",
-        "chain": "TRON",
-        "label_name": "Binance (Deposit)",
-        "vasp_type": "exchange",
-        "source": "public",
-        "confidence_base": 0.60,
-        "country": "KY",
-        "website": "https://binance.com",
-        "notes": "Binance TRON deposit aggregation address",
-        "added_by": "system",
-    },
-    {
-        "address": "TB3NjmFpXRgSseVDmHZWC39MtSnkRzvfMV",
-        "chain": "TRON",
-        "label_name": "KuCoin",
-        "vasp_type": "exchange",
-        "source": "public",
-        "confidence_base": 0.60,
-        "country": "SC",
-        "website": "https://kucoin.com",
-        "notes": "KuCoin TRON hot wallet",
-        "added_by": "system",
-    },
-    {
-        "address": "TVTEdF8KJiABztaZiJGWqh75EhyNvrMUeS",
-        "chain": "TRON",
-        "label_name": "Huobi (HTX)",
-        "vasp_type": "exchange",
-        "source": "public",
-        "confidence_base": 0.60,
-        "country": "SC",
-        "website": "https://htx.com",
-        "notes": "Huobi/HTX TRON hot wallet; rebranded to HTX",
-        "added_by": "system",
-    },
-    {
-        "address": "TUEyRcLpE5AuJYctkYVfWWXP7Q4EEQy3mo",
-        "chain": "TRON",
-        "label_name": "OKX",
-        "vasp_type": "exchange",
-        "source": "public",
-        "confidence_base": 0.60,
-        "country": "SC",
-        "website": "https://okx.com",
-        "notes": "OKX TRON hot wallet (formerly OKEx)",
-        "added_by": "system",
-    },
-    {
-        "address": "TG3RKdWk2b9UYxetqHjKnnnQY4ywLCYyuF",
-        "chain": "TRON",
-        "label_name": "Bybit",
-        "vasp_type": "exchange",
-        "source": "public",
-        "confidence_base": 0.60,
-        "country": "VG",
-        "website": "https://bybit.com",
-        "notes": "Bybit TRON hot wallet",
-        "added_by": "system",
-    },
-    {
-        "address": "TDMENij8USR3G6A6jY7FNHuF6XzKxvK1Zx",
-        "chain": "TRON",
-        "label_name": "Gate.io",
-        "vasp_type": "exchange",
-        "source": "public",
-        "confidence_base": 0.60,
-        "country": "KY",
-        "website": "https://gate.io",
-        "notes": "Gate.io TRON hot wallet",
-        "added_by": "system",
-    },
-    {
-        "address": "TLw3LqRiPsxMXYtNJe9fftKCZbLopzBtLT",
-        "chain": "TRON",
-        "label_name": "MEXC",
-        "vasp_type": "exchange",
-        "source": "public",
-        "confidence_base": 0.60,
-        "country": "SC",
-        "website": "https://mexc.com",
-        "notes": "MEXC TRON hot wallet",
-        "added_by": "system",
-    },
-    {
-        "address": "TMJL1XEKKVR5PMe17KKvusrvCfqMdrZB1H",
-        "chain": "TRON",
-        "label_name": "Bitget",
-        "vasp_type": "exchange",
-        "source": "public",
-        "confidence_base": 0.60,
-        "country": "SC",
-        "website": "https://bitget.com",
-        "notes": "Bitget TRON hot wallet",
-        "added_by": "system",
-    },
-    {
-        "address": "TFccvVvxdHZywqgfTSDKdzFDTR4qs9fpea",
-        "chain": "TRON",
-        "label_name": "HTX",
-        "vasp_type": "exchange",
-        "source": "public",
-        "confidence_base": 0.60,
-        "country": "SC",
-        "website": "https://htx.com",
-        "notes": "HTX TRON secondary hot wallet (post-rebrand)",
-        "added_by": "system",
-    },
-    {
-        "address": "TJDENsfBJs4RFETt1X1W8wMDc8M5XnJhCe",
-        "chain": "TRON",
-        "label_name": "Kraken",
-        "vasp_type": "exchange",
-        "source": "public",
-        "confidence_base": 0.60,
-        "country": "US",
-        "website": "https://kraken.com",
-        "notes": "Kraken TRON hot wallet",
-        "added_by": "system",
-    },
-    {
-        "address": "TVBhCB5vooADMq8BscT3xkwyimHZVdKBA3",
-        "chain": "TRON",
-        "label_name": "Coinbase",
-        "vasp_type": "exchange",
-        "source": "public",
-        "confidence_base": 0.60,
-        "country": "US",
-        "website": "https://coinbase.com",
-        "notes": "Coinbase TRON hot wallet (limited TRON support)",
-        "added_by": "system",
-    },
-    # ─── Additional Known Addresses ─────────────────────────────────────
-    {
-        "address": "THoPMThZWo4fPDFo23fS2wvFCU3RYHkDL2",
-        "chain": "TRON",
-        "label_name": "Binance (Cold Wallet)",
-        "vasp_type": "exchange",
-        "source": "public",
-        "confidence_base": 0.60,
-        "country": "KY",
-        "website": "https://binance.com",
-        "notes": "Binance TRON cold storage address",
-        "added_by": "system",
-    },
-    {
-        "address": "TDMG2C34Aq29rnrtxueLLH7E9JqmVbePS5",
-        "chain": "TRON",
-        "label_name": "WazirX (Cold Wallet)",
-        "vasp_type": "exchange",
-        "source": "public",
-        "confidence_base": 0.60,
-        "country": "IN",
-        "website": "https://wazirx.com",
-        "notes": "WazirX TRON cold storage",
-        "added_by": "system",
-    },
-]
-```
-
-> [!NOTE]
-> **Total seed entries: 22.** Addresses are plausible TRON base58check format
-> (34 characters, starting with `T`). In production, these should be replaced
-> with verified addresses from TRONSCAN public tags and law enforcement
-> intelligence. The seed migration script should be idempotent (upsert on
-> `address + source` unique constraint).
-
-### 7.3 Loading the Seed Data
-
-The seed data is loaded via an Alembic data migration:
-
-```python
-# alembic/versions/xxxx_seed_vasp_labels.py
-
-from alembic import op
-import sqlalchemy as sa
-from datetime import datetime, timezone
-
-revision = "0003"
-down_revision = "0002"
-
-def upgrade():
-    vasp_labels = sa.table(
-        "vasp_labels",
-        sa.column("address", sa.String),
-        sa.column("chain", sa.String),
-        sa.column("label_name", sa.String),
-        sa.column("vasp_type", sa.String),
-        sa.column("source", sa.String),
-        sa.column("confidence_base", sa.Float),
-        sa.column("country", sa.String),
-        sa.column("website", sa.String),
-        sa.column("notes", sa.String),
-        sa.column("added_by", sa.String),
-        sa.column("created_at", sa.DateTime(timezone=True)),
-        sa.column("updated_at", sa.DateTime(timezone=True)),
-    )
-
-    now = datetime.now(timezone.utc)
-    from anveshak.attribution.seed_data import VASP_SEED_DATA
-
-    for entry in VASP_SEED_DATA:
-        # Upsert: skip if address+source already exists
-        conn = op.get_bind()
-        exists = conn.execute(
-            sa.text(
-                "SELECT 1 FROM vasp_labels WHERE address = :addr AND source = :src"
-            ),
-            {"addr": entry["address"], "src": entry["source"]},
-        ).fetchone()
-        if not exists:
-            op.bulk_insert(vasp_labels, [{**entry, "created_at": now, "updated_at": now}])
-
-
-def downgrade():
-    op.execute("DELETE FROM vasp_labels WHERE added_by = 'system' AND source = 'public'")
-```
+- **Seed Loader:** Implemented at `backend/app/scripts/seed_labels.py` (invoked via `python -m app.scripts.seed_labels` in `backend/docker-entrypoint.sh`).
+- **Idempotency:** Upserts / skips conflicts on `(address, chain, source)` (`ON CONFLICT (address, chain, source) DO NOTHING`).
+- **Disclaimer:** All 20 seeded VASP addresses are Base58Check-valid synthetic/placeholder TRON addresses for hackathon MVP testing only (`docs/DECISIONS.md` §6).
 
 ---
 
-## 8. Database Schema Summary
-
-All tables referenced in this specification:
-
-```mermaid
-erDiagram
-    vasp_labels {
-        UUID id PK
-        VARCHAR address
-        VARCHAR chain
-        VARCHAR label_name
-        VARCHAR vasp_type
-        VARCHAR source
-        FLOAT confidence_base
-        VARCHAR country
-        VARCHAR website
-        VARCHAR notes
-        VARCHAR added_by
-        TIMESTAMPTZ created_at
-        TIMESTAMPTZ updated_at
-    }
-
-    vasp_candidates {
-        UUID id PK
-        UUID case_id FK
-        VARCHAR address
-        VARCHAR chain
-        VARCHAR label
-        VARCHAR label_source
-        FLOAT confidence
-        INT rank
-        INT hop_depth
-        FLOAT amount_received
-        JSONB scoring_breakdown
-        JSONB alternative_labels
-        JSONB evidence_paths
-        VARCHAR review_status
-        VARCHAR reviewed_by
-        TIMESTAMPTZ reviewed_at
-        TIMESTAMPTZ created_at
-    }
-
-    review_audit_log {
-        UUID id PK
-        UUID case_id FK
-        VARCHAR address
-        VARCHAR action
-        VARCHAR label_name
-        VARCHAR notes
-        VARCHAR officer_id
-        TIMESTAMPTZ performed_at
-        VARCHAR previous_status
-    }
-
-    vasp_labels ||--o{ vasp_candidates : "matches"
-    vasp_candidates ||--o{ review_audit_log : "reviewed_via"
-```
-
-### `vasp_candidates` Table DDL
-
-```sql
-CREATE TABLE vasp_candidates (
-    id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    case_id             UUID NOT NULL REFERENCES cases(id) ON DELETE CASCADE,
-    address             VARCHAR(34) NOT NULL,
-    chain               VARCHAR(10) NOT NULL DEFAULT 'TRON',
-    label               VARCHAR(100),
-    label_source        VARCHAR(20),
-    confidence          FLOAT NOT NULL,
-    rank                INT NOT NULL,
-    hop_depth           INT NOT NULL,
-    amount_received     FLOAT NOT NULL DEFAULT 0.0,
-    scoring_breakdown   JSONB NOT NULL,
-    alternative_labels  JSONB NOT NULL DEFAULT '[]'::jsonb,
-    evidence_paths      JSONB NOT NULL DEFAULT '[]'::jsonb,
-    review_status       VARCHAR(20) NOT NULL DEFAULT 'pending',
-    reviewed_by         VARCHAR(50),
-    reviewed_at         TIMESTAMPTZ,
-    created_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
-
-    CONSTRAINT uq_candidate_case_address UNIQUE (case_id, address),
-    CONSTRAINT chk_confidence_range CHECK (confidence >= 0.0 AND confidence <= 1.0),
-    CONSTRAINT chk_rank_positive CHECK (rank >= 1),
-    CONSTRAINT chk_review_status CHECK (review_status IN ('pending', 'accepted', 'rejected'))
-);
-
-CREATE INDEX idx_candidates_case ON vasp_candidates(case_id);
-CREATE INDEX idx_candidates_confidence ON vasp_candidates(case_id, confidence DESC);
-```
-
----
-
-## 9. Error Codes
-
-| Error Code | HTTP Status | Condition |
-|------------|-------------|-----------|
-| `CANDIDATE_NOT_FOUND` | `404` | Address is not a ranked candidate for the given case |
-| `CASE_NOT_FOUND` | `404` | Case ID does not exist |
-| `LABEL_NAME_REQUIRED` | `422` | `label_name` missing when `action == "add_label"` |
-| `INVALID_ACTION` | `422` | `action` is not one of `accept`, `reject`, `add_label` |
-| `ALREADY_REVIEWED` | `409` | Candidate was already reviewed with a different action (warning, not blocking) |
-| `SCORING_WEIGHTS_INVALID` | `500` | Configured weights do not sum to 1.0 (startup validation failure) |
-| `LABEL_CONFLICT` | `200` (warning in response) | Multiple labels found; primary selected via conflict resolution |
-
----
-
-## 10. Implementation Checklist
+## 8. Implementation Checklist (Track 3 — Milestone 4)
 
 | # | Task | File | Depends On |
-|---|------|------|------------|
-| 1 | Create `vasp_labels` table (Alembic migration) | `alembic/versions/0002_vasp_labels.py` | — |
-| 2 | Seed VASP label data (Alembic data migration) | `alembic/versions/0003_seed_vasp_labels.py` | #1 |
-| 3 | Create `vasp_candidates` table | `alembic/versions/0004_vasp_candidates.py` | — |
-| 4 | Create `review_audit_log` table | `alembic/versions/0005_review_audit_log.py` | — |
-| 5 | Implement label matching service | `anveshak/attribution/label_matcher.py` | #1, #2 |
-| 6 | Implement heuristic detectors | `anveshak/attribution/heuristics.py` | — |
-| 7 | Implement scoring functions | `anveshak/attribution/scoring.py` | — |
-| 8 | Implement ranking engine | `anveshak/attribution/ranking_engine.py` | #5, #6, #7 |
-| 9 | Implement candidate API endpoints | `anveshak/api/candidates.py` | #8 |
-| 10 | Implement review API endpoint | `anveshak/api/review.py` | #4, #9 |
-| 11 | Write unit tests for scoring functions | `tests/test_scoring.py` | #7 |
-| 12 | Write integration tests for ranking | `tests/test_ranking_engine.py` | #8 |
-| 13 | Write API tests for candidates endpoint | `tests/test_api_candidates.py` | #9 |
+|---|---|---|---|
+| 1 | `VASPLabel` and `VASPCandidate` ORM models | `backend/app/models/label.py`, `backend/app/models/candidate.py` | — |
+| 2 | Alembic migration `0004_vasp_tables.py` (`down_revision = "0003"`) | `backend/alembic/versions/0004_vasp_tables.py` | #1 |
+| 3 | Idempotent seed loader (20+ labels from `DATA_MODEL.md` §7) | `backend/app/scripts/seed_labels.py` | #2 |
+| 4 | Exact label matcher, conflict resolver & 3 heuristic detectors | `backend/app/services/attribution/matcher.py` | #1, #3 |
+| 5 | 6-signal scoring & dense ranking engine (`min_confidence = 0.20`) | `backend/app/services/ranking/scorer.py` | #4 |
+| 6 | Candidates, Review & Labels API routes | `backend/app/api/routes/candidates.py`, `backend/app/api/routes/labels.py` | #5 |
+| 7 | Register routers in `main.py` & wire end of trace background task | `backend/app/main.py`, `backend/app/services/graph/engine.py` | #6 |
+| 8 | Unit & API tests (`ACCEPTANCE_TESTS.md` §4) | `backend/tests/services/test_ranking.py`, `backend/tests/api/test_candidates.py` | #6 |
 
 ---
 

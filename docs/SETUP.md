@@ -136,8 +136,8 @@ anveshak/
 │   │   ├── api/             ← Route handlers
 │   │   ├── models/          ← DB + Pydantic models
 │   │   ├── services/        ← Business logic modules
-│   │   ├── scripts/         ← CLI utilities (seed_labels.py)
-│   │   └── db/              ← Database session, engine
+│   │   ├── scripts/         ← CLI utilities (seed_labels.py, seed_demo.py)
+│   │   └── core/database.py ← Database session, async engine, Base
 │   └── tests/
 ├── frontend/
 │   ├── Dockerfile           ← Frontend container image

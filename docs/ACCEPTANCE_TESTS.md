@@ -120,7 +120,7 @@ EXPECTED RESPONSE: {"status": "ok", "version": "1.0.0", "database": "connected"}
 4. **`test_filter_time_window`**: Transaction outside `[reported_at - 30d, reported_at + 7d]` is marked `pruned=True, prune_reason="time_window"`.
 5. **`test_filter_degree_cap`**: Address with `> 100` outgoing txns is NOT expanded further and is flagged as potential VASP candidate.
 6. **`test_filter_path_continuity`**: Hop 2 outgoing txn occurring *before* incoming txn or `> 72h` after incoming txn is marked `pruned=True, prune_reason="path_discontinuity"`.
-7. **`test_filter_duplicate_tx`**: Same `tx_hash` reached via two paths is kept only on shortest/highest-flow path.
+7. **`test_filter_duplicate`**: Same `tx_hash` reached via two paths is kept only on shortest/highest-flow path.
 8. **`test_cycle_detection`**: `A -> B -> C -> A` terminates cleanly without infinite loop and logs `cycles_detected >= 1`.
 
 ---

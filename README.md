@@ -30,24 +30,26 @@ We are operating an active **5-developer track model** to ensure zero duplicatio
 
 ### 1. Domain Split
 
-| Track | Lead | Modules Covered | Milestones |
+> **Team Lead & Final PR Reviewer:** **Lochan** reviews all PRs into `dev`/`main`, enforces CI gates, oversees the Track 1 (M1) database/intake baseline, and merges verified milestones into `main`.
+
+| Track | Owner | Modules Covered | Milestones |
 |---|---|---|---|
-| **Track 1** | **Lochan** | Case Intake API, DB Schema & Migrations | M1 |
-| **Track 2** | **Hanamaraddi** | Project Scaffold, TRON Adapter (TronGrid + Cache), NetworkX Graph Engine & Pruning | M0, M2, M3 |
+| **Track 1 (Foundation)** | **Lochan** *(Team Lead)* | Case Intake API, DB Schema & Migration `0001` | M1 |
+| **Track 2** | **Hanamaraddi** | Project Scaffold, TRON Adapter (TronGrid + Cache), NetworkX Graph Engine & Pruning | M0 *(Done)*, M2, M3 |
 | **Track 3** | **Harshitha** | VASP Attribution & Label Store, 6-Signal Ranking Engine, Evidence & Action Package (JSON + PDF) | M4, M5 |
 | **Track 4** | **Haripriya** | Frontend App Shell, Dashboard, Case List, Create Case, Case Detail Overview | M6 |
 | **Track 5** | **Krishnapriya** | Frontend Cytoscape.js Graph, Candidate/Evidence/Action Views, E2E Acceptance Tests & Demo Seed | M7, M8 |
 
 ### 2. The Live "Claim ➔ Working ➔ Finished" Flow
 
-Whenever either developer starts or completes a task:
+Whenever any developer starts or completes a task:
 
 1. **Pull latest `dev`:**
    ```bash
    git checkout dev && git pull origin dev
    ```
 2. **Claim task in [docs/SPRINT_PLAN.md](./docs/SPRINT_PLAN.md):**
-   Change the task's status from `[TODO]` to `[WORKING: Lochan]` (or `[WORKING: Teammate]`), commit, and push to `dev`. Now the other person immediately sees you own that task.
+   Change the task's status from `[TODO]` to `[WORKING: <YourName>]`, commit, and push to `dev` so teammates see you own it:
    ```bash
    git commit -am "chore(sprint): claim task <task-name>"
    git push origin dev
@@ -56,15 +58,10 @@ Whenever either developer starts or completes a task:
    ```bash
    git checkout -b feat/<task-name>
    ```
-4. **Finish, test, and merge:**
-   - Run tests & linters (`pytest`, `ruff`, `pnpm test`).
-   - Merge `feat/<task-name>` into `dev` (or open PR).
-   - In [docs/SPRINT_PLAN.md](./docs/SPRINT_PLAN.md), mark it `[FINISHED: Lochan]`.
-   - Push to `dev`:
-   ```bash
-   git commit -am "chore(sprint): finish task <task-name>"
-   git push origin dev
-   ```
+4. **Finish, test, and open PR to `dev`:**
+   - Rebase onto latest `dev` (`git pull --rebase origin dev`), verify single Alembic head if you added a migration (`alembic heads`), and run tests & linters (`ruff check .`, `black --check .`, `pytest`, `pnpm lint`, `tsc --noEmit`, `pnpm test --run`).
+   - Update [docs/SPRINT_PLAN.md](./docs/SPRINT_PLAN.md) to `[FINISHED: <YourName>]` on your branch, push `feat/<task-name>`, and open a Pull Request into `dev` for **Lochan (Team Lead)** review.
+   - Once reviewed and CI passes on `dev`, **Lochan** merges verified milestones from `dev` into `main`.
 
 ---
 
@@ -75,7 +72,8 @@ Whenever either developer starts or completes a task:
 |----------|---------|
 | [CONTEXT.md](./CONTEXT.md) | Project overview, stack, roadmap |
 | [CONTRIBUTING.md](./CONTRIBUTING.md) | Git workflow, commit conventions, code standards |
-| [OWNERSHIP.md](./OWNERSHIP.md) | Module ownership & 2-dev collaboration rules |
+| [OWNERSHIP.md](./OWNERSHIP.md) | 5-developer track ownership & collaboration rules |
+| [SECURITY.md](./SECURITY.md) | Security policy, PII handling & responsible disclosure |
 | [docs/ADR.md](./docs/ADR.md) | Architecture Decision Records |
 | [docs/SPRINT_PLAN.md](./docs/SPRINT_PLAN.md) | Active sprint plan & live task status tracker |
 | [docs/AGENT_GUIDE.md](./docs/AGENT_GUIDE.md) | AI coding agent best practices |
@@ -98,7 +96,7 @@ Whenever either developer starts or completes a task:
 
 ## 🤖 Prompt for AI Coding Agents
 
-Replace `<YourName>` (`Hanamaraddi`, `Harshitha`, `Haripriya`, or `Krishnapriya`) and paste this exact prompt into your AI coding agent:
+Replace `<YourName>` (`Lochan`, `Hanamaraddi`, `Harshitha`, `Haripriya`, or `Krishnapriya`) and paste this exact prompt into your AI coding agent:
 
 ```text
 First run `git checkout dev && git pull origin dev` to get the latest code and specifications.
@@ -108,11 +106,11 @@ Read `README.md`, `CONTEXT.md`, `OWNERSHIP.md`, `CONTRIBUTING.md`, `docs/DECISIO
 You are working for `<YourName>`. Check your assigned Track in `OWNERSHIP.md` and your tasks in `docs/SPRINT_PLAN.md` and `docs/MILESTONES.md`.
 
 Rules:
-1. Do NOT touch files outside your assigned Track in `OWNERSHIP.md`.
+1. Do NOT touch files outside your assigned Track in `OWNERSHIP.md` (except shared registration lines documented in `OWNERSHIP.md` and `docs/DECISIONS.md` §10).
 2. Before writing any code, mark your current task `[WORKING: <YourName>]` in `docs/SPRINT_PLAN.md`, commit, and push to `dev`.
-3. Create a feature branch (`feat/<task-name>`) off `dev` and build ONLY one milestone/task at a time.
+3. Create a feature branch (`feat/<task-name>`) off `dev` and build ONLY one milestone/task at a time. Keep Alembic migrations strictly linear per `docs/DECISIONS.md` §9.
 4. Follow `docs/DECISIONS.md`, `docs/API_CONTRACT.md`, `docs/DATA_MODEL.md`, `docs/GRAPH_ENGINE.md`, `docs/VASP_ATTRIBUTION.md`, `docs/UI_SPEC.md`, `docs/ACTION_PACKAGE_SPEC.md`, and `docs/DEPLOYMENT.md` exactly. Do not invent undocumented APIs, DB columns, or UI behavior.
-5. Write tests matching `docs/ACCEPTANCE_TESTS.md`, run all linters and tests (`ruff check .`, `black --check .`, `pytest`, or `tsc --noEmit` / `pnpm test`), mark your task `[FINISHED: <YourName>]` in `docs/SPRINT_PLAN.md`, push your branch, and open a PR for Team Lead (Lochan) review before merging to `main`.
+5. Write tests matching `docs/ACCEPTANCE_TESTS.md`, run all linters and tests (`ruff check .`, `black --check .`, `pytest`, or `pnpm lint`, `tsc --noEmit`, `pnpm test --run`), mark your task `[FINISHED: <YourName>]` in `docs/SPRINT_PLAN.md`, push your branch, and open a PR targeting `dev` for Team Lead (Lochan) review before milestone merge into `main`.
 
 If any requirement conflicts or is missing, stop and ask before guessing.
 ```
@@ -121,4 +119,4 @@ If any requirement conflicts or is missing, stop and ask before guessing.
 
 ## License
 
-Internal — SIH 2026 Submission
+Internal — SIH 2026 Submission · See [LICENSE](./LICENSE).

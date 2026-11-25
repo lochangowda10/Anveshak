@@ -1,6 +1,6 @@
 # ANVESHAK — Sprint Plan (MVP)
 
-> Active Sprint: 5-Developer Track Workflow (Lochan · Hanamaraddi · Harshitha · Haripriya · Krishnapriya) · ~4 weeks to SIH demo
+> Active Sprint: 5-Developer Track Workflow · **Team Lead & Final PR Reviewer: Lochan** · Team: Hanamaraddi, Harshitha, Haripriya, Krishnapriya · ~4 weeks to SIH demo
 
 ### Task Status Protocol
 
