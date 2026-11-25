@@ -92,25 +92,25 @@ Before committing any AI output:
 
 ---
 
-## Parallel Agent Workflow (Team of 6)
+## Parallel Agent Workflow (Team of 5)
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                        SHARED (Read-Only for Agents)            │
-│  CONTEXT.md · API_CONTRACT.md · CONTRIBUTING.md · OWNERSHIP.md  │
+│  CONTEXT.md · API_CONTRACT.md · DATA_MODEL.md · OWNERSHIP.md    │
 └──────────────┬──────────────────────────────────────────────────┘
                │
-    ┌──────────┼──────────┬──────────┬──────────┬──────────┐
-    ▼          ▼          ▼          ▼          ▼          ▼
- Agent 1    Agent 2    Agent 3    Agent 4    Agent 5    Agent 6
- intake/    chain/     graph/     ranking/   attrib./   frontend/
- evidence   tron       pruning    scoring    labels     graph-view
-    │          │          │          │          │          │
-    ▼          ▼          ▼          ▼          ▼          ▼
- feat/       feat/      feat/     feat/     feat/      feat/
- intake      tron       graph     ranking   attrib     ui-graph
-    │          │          │          │          │          │
-    └──────────┴──────────┴──────────┴──────────┴──────────┘
+    ┌──────────┼──────────┬──────────┬──────────┐
+    ▼          ▼          ▼          ▼          ▼
+  Lochan   Hanamaraddi Harshitha Haripriya Krishnapriya
+  intake/   chain/     attrib/    ui-cases/  ui-graph/
+  db-cases  graph/     evidence/  app-shell  e2e-qa/
+    │          │          │          │          │
+    ▼          ▼          ▼          ▼          ▼
+  feat/      feat/      feat/      feat/      feat/
+  intake     tron-graph attrib-pdf ui-cases   ui-graph-e2e
+    │          │          │          │          │
+    └──────────┴──────────┴──────────┴──────────┘
                               │
                            dev branch
                               │

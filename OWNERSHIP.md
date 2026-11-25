@@ -41,19 +41,20 @@ anveshak/
 
 ---
 
-## Current Team Setup (4-Developer Active Sprint)
+## Current Team Setup (5-Developer Active Sprint)
 
-> **4 developers** are actively driving implementation across 4 non-overlapping tracks.
+> **5 developers** are actively driving implementation across 5 non-overlapping tracks.
 > Tasks are claimed asynchronously using the **Claim ➔ Working ➔ Finished** protocol in `docs/SPRINT_PLAN.md`.
 
-### Primary Domain Split (4 Tracks)
+### Primary Domain Split (5 Tracks)
 
-| Track | Lead | Backup / Reviewer | Owned Modules & Scope |
-|---|---|---|---|
-| **Track 1: Ingestion, Chain & Graph Core** | **Lochan** | Dev 4 | `app/models/`, `alembic/`, `app/api/routes/cases.py`, `app/services/chain/`, `app/services/graph/`, `app/api/routes/trace.py` |
-| **Track 2: Intelligence, Ranking & Action Pkg** | **Dev 2** | Lochan | `app/services/attribution/`, `app/services/ranking/`, `app/services/evidence/`, `app/api/routes/candidates.py`, `labels.py`, `evidence.py`, `seed_labels.py` |
-| **Track 3: Frontend & Graph Visualization** | **Dev 3** | Dev 2 | `frontend/` (App Shell, Dashboard, Case List, Create Case, Case Detail, `CytoscapeGraph.tsx`, Candidate/Evidence/Action views) |
-| **Track 4: Infra, CI/CD & QA / E2E Tests** | **Dev 4** | Lochan | `docker-compose.yml`, `backend/Dockerfile`, `frontend/Dockerfile`, `.github/workflows/ci.yml`, `tests/e2e/`, `seed_demo.py`, acceptance verification |
+| Track | Lead | Backup / Reviewer | Owned Modules & Scope | Milestones |
+|---|---|---|---|---|
+| **Track 1: DB Schema & Case Intake** | **Lochan** | Hanamaraddi | `backend/app/models/case.py`, `backend/alembic/`, `backend/app/api/schemas/case.py`, `backend/app/api/routes/cases.py` | **M1** |
+| **Track 2: TRON Adapter & Graph Engine** | **Hanamaraddi** | Lochan | `backend/app/services/chain/`, `backend/app/models/transaction.py`, `backend/app/services/graph/`, `backend/app/models/trace.py`, `backend/app/api/routes/trace.py` | **M0, M2, M3** |
+| **Track 3: VASP Attribution, Ranking & Evidence/PDF** | **Harshitha** | Lochan | `backend/app/services/attribution/`, `backend/app/services/ranking/`, `backend/app/services/evidence/`, `backend/app/models/{label,candidate,action_package}.py`, `backend/app/api/routes/{candidates,labels,evidence}.py`, `backend/app/scripts/seed_labels.py` | **M4, M5** |
+| **Track 4: Frontend — Case Management & App Shell** | **Haripriya** | Krishnapriya | `frontend/src/App.tsx`, `frontend/src/components/`, `frontend/src/services/api.ts`, `Dashboard.tsx`, `CaseList.tsx`, `CreateCase.tsx`, `CaseDetail.tsx` | **M6** |
+| **Track 5: Frontend — Cytoscape Graph, Evidence UI & E2E QA** | **Krishnapriya** | Hanamaraddi | `frontend/src/graph/CytoscapeGraph.tsx`, `CandidatePanel`, `EvidenceView`, `ActionPackageView`, `backend/tests/e2e/`, `backend/app/scripts/seed_demo.py`, Docker/CI QA | **M7, M8** |
 
 ---
 

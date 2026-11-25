@@ -24,18 +24,19 @@ docker compose up --build
 # Frontend:         http://localhost:5173
 ```
 
-## 👥 4-Developer Team Workflow
+## 👥 5-Developer Team Workflow
 
-We are operating an active **4-developer track model** to ensure zero duplication of work and rapid parallel delivery:
+We are operating an active **5-developer track model** to ensure zero duplication of work and rapid parallel delivery:
 
 ### 1. Domain Split
 
-| Track | Lead | Modules Covered |
-|---|---|---|
-| **Track 1** | **Lochan** | Case Intake API, DB Schema & Migrations, TRON Adapter (TronGrid), NetworkX Graph Engine & Pruning |
-| **Track 2** | **Dev 2** | VASP Attribution & Label Store, 6-Signal Ranking Engine, Evidence & Action Package (JSON + PDF) |
-| **Track 3** | **Dev 3** | Frontend (`React + Vite + TypeScript`), Dashboard, Case UI, Cytoscape.js Interactive Graph |
-| **Track 4** | **Dev 4** | Dockerfiles, `docker-compose.yml`, GitHub Actions CI/CD, E2E & Acceptance Tests, Demo Seed Data |
+| Track | Lead | Modules Covered | Milestones |
+|---|---|---|---|
+| **Track 1** | **Lochan** | Case Intake API, DB Schema & Migrations | M1 |
+| **Track 2** | **Hanamaraddi** | Project Scaffold, TRON Adapter (TronGrid + Cache), NetworkX Graph Engine & Pruning | M0, M2, M3 |
+| **Track 3** | **Harshitha** | VASP Attribution & Label Store, 6-Signal Ranking Engine, Evidence & Action Package (JSON + PDF) | M4, M5 |
+| **Track 4** | **Haripriya** | Frontend App Shell, Dashboard, Case List, Create Case, Case Detail Overview | M6 |
+| **Track 5** | **Krishnapriya** | Frontend Cytoscape.js Graph, Candidate/Evidence/Action Views, E2E Acceptance Tests & Demo Seed | M7, M8 |
 
 ### 2. The Live "Claim ➔ Working ➔ Finished" Flow
 

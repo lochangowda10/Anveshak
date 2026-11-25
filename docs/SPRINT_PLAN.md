@@ -1,115 +1,109 @@
 # ANVESHAK — Sprint Plan (MVP)
 
-> Active Sprint: 4-Developer Track Workflow · ~4 weeks to SIH demo · 2-week sprints
+> Active Sprint: 5-Developer Track Workflow (Lochan · Hanamaraddi · Harshitha · Haripriya · Krishnapriya) · ~4 weeks to SIH demo
 
 ### Task Status Protocol
 
 When taking on a task:
 - Change status from `[TODO]` to `[WORKING: @YourName]` and commit/push to `dev`.
 - When done and tested, change status to `[FINISHED: @YourName]`.
-- This ensures neither developer ever duplicates effort.
+- This ensures no two developers ever duplicate effort.
 
 ---
 
-## Sprint 0 — Setup (Days 1–2)
+## Sprint 0 — Setup (Milestone 0 — Completed)
 
 **Goal:** Everyone can run the project locally.
 
 | Task                                        | Owner          | Status |
 |---------------------------------------------|----------------|--------|
-| Initialize monorepo structure               | Lochan         | [FINISHED: OpenCode] |
-| Set up `pyproject.toml` + Ruff + Black      | Lochan         | [FINISHED: OpenCode] |
-| Set up React + Vite + TypeScript + ESLint   | Dev 2          | [FINISHED: OpenCode] |
-| Create `docker-compose.yml` (Postgres + API)| Lochan         | [FINISHED: OpenCode] |
+| Initialize monorepo structure               | Hanamaraddi    | [FINISHED: OpenCode] |
+| Set up `pyproject.toml` + Ruff + Black      | Hanamaraddi    | [FINISHED: OpenCode] |
+| Set up React + Vite + TypeScript + ESLint   | Hanamaraddi    | [FINISHED: OpenCode] |
+| Create `docker-compose.yml` (Postgres + API)| Hanamaraddi    | [FINISHED: OpenCode] |
 | Create `.env.example`                       | Lochan         | [FINISHED: Lochan] |
-| Set up CI (GitHub Actions: lint + test)     | Dev 2          | [FINISHED: OpenCode] |
-| Everyone clones, runs `docker compose up`   | Both           | [FINISHED: OpenCode] |
-| Create initial Alembic migration (empty)    | Lochan         | [FINISHED: OpenCode] |
+| Set up CI (GitHub Actions: lint + test)     | Hanamaraddi    | [FINISHED: OpenCode] |
+| Everyone clones, runs `docker compose up`   | All (5)        | [FINISHED: OpenCode] |
+| Create initial Alembic migration (empty)    | Hanamaraddi    | [FINISHED: OpenCode] |
 
 **Exit Criteria:** `docker compose up` starts Postgres + FastAPI + React on
 every team member's machine.
 
 ---
 
-## Sprint 1 — Core Pipeline (Days 3–9)
+## Sprint 1 — Core Pipeline (Milestones 1, 2, 6)
 
-**Goal:** Seed wallet → transaction fetching → graph building (no pruning yet).
+**Goal:** Case intake + TRON transaction fetching + raw graph + Case Management UI.
 
 | Task                                            | Owner          | Depends On     | Status |
 |-------------------------------------------------|----------------|----------------|--------|
-| Design DB schema (cases, transactions, labels)  | DB Owner       | —              | ☐      |
-| Alembic migration for schema                    | DB Owner       | Schema design  | ☐      |
-| `POST /api/v1/cases` endpoint                   | Intake Owner   | DB schema      | ☐      |
-| `GET /api/v1/cases` + `GET /cases/{id}`         | Intake Owner   | DB schema      | ☐      |
-| TRON adapter: fetch TRC-20 transfers            | Chain Owner    | —              | ☐      |
-| TRON adapter: fetch normal TRX transfers        | Chain Owner    | —              | ☐      |
-| Transaction normalizer (→ canonical schema)     | Chain Owner    | DB schema      | ☐      |
-| Graph builder: BFS from seed wallet (no prune)  | Graph Owner    | Chain adapter  | ☐      |
-| Graph serializer: NetworkX → Cytoscape JSON     | Graph Owner    | Graph builder  | ☐      |
-| Frontend: Case list page                        | Frontend Owner | Cases API      | ☐      |
-| Frontend: Case detail page (empty graph area)   | Frontend Owner | Cases API      | ☐      |
-| Unit tests: chain adapter (mocked API)          | Chain Owner    | Chain adapter  | ☐      |
-| Unit tests: graph builder                       | Graph Owner    | Graph builder  | ☐      |
+| Case/Tag/SeedWallet SQLAlchemy models (M1)      | Lochan         | —              | [TODO] |
+| Alembic migration `0001_cases_and_wallets` (M1) | Lochan         | Case models    | [TODO] |
+| `POST /api/v1/cases` endpoint + validation (M1) | Lochan         | Migration 0001 | [TODO] |
+| `GET /api/v1/cases` + `GET /cases/{id}` (M1)    | Lochan         | Migration 0001 | [TODO] |
+| Unit/API tests for Cases endpoints (M1)         | Lochan         | Cases routes   | [TODO] |
+| `ChainAdapter` protocol + `Transaction` model (M2)| Hanamaraddi  | —              | [TODO] |
+| TRON adapter: fetch TRC-20 & TRX transfers (M2) | Hanamaraddi    | ChainAdapter   | [TODO] |
+| Transaction DB cache (24h TTL) (M2)             | Hanamaraddi    | Tx model       | [TODO] |
+| Unit tests: TRON adapter (mocked httpx) (M2)    | Hanamaraddi    | TRON adapter   | [TODO] |
+| Frontend: App Shell, Dashboard, Case List (M6)  | Haripriya      | —              | [TODO] |
+| Frontend: Create Case form + Case Detail shell (M6)| Haripriya   | —              | [TODO] |
 
-**Exit Criteria:** Submit a wallet → see raw (unpruned) graph in the UI.
+**Exit Criteria:** Create a case in UI → persisted in Postgres → TRON adapter fetches mocked/live transfers.
 
 ---
 
-## Sprint 2 — Intelligence Layer (Days 10–16)
+## Sprint 2 — Intelligence Layer (Milestones 3, 4, 7)
 
-**Goal:** Pruning + VASP ranking + evidence display.
+**Goal:** Pruned BFS graph + VASP attribution & ranking + Cytoscape graph UI.
 
-| Task                                            | Owner            | Depends On       | Status |
-|-------------------------------------------------|------------------|------------------|--------|
-| Pruning filters: hop limit, amount threshold    | Graph Owner      | Graph builder    | ☐      |
-| Pruning filters: time window, degree cap        | Graph Owner      | Graph builder    | ☐      |
-| Pruning filters: path continuity, dedup         | Graph Owner      | Graph builder    | ☐      |
-| VASP label store (seed data: known exchanges)   | Attribution Owner| DB schema        | ☐      |
-| Label matching: address → known VASP lookup     | Attribution Owner| Label store      | ☐      |
-| Ranking signals: implement scoring formula      | Ranking Owner    | Graph + labels   | ☐      |
-| `GET /cases/{id}/candidates` endpoint           | Ranking Owner    | Scoring          | ☐      |
-| Frontend: Cytoscape graph — interactive view    | Frontend Owner   | Graph serializer | ☐      |
-| Frontend: Candidate VASP panel (ranked list)    | Frontend Owner   | Candidates API   | ☐      |
-| Frontend: Click node → show address details     | Frontend Owner   | Graph view       | ☐      |
-| Integration test: full pipeline seed → rank     | All              | All above        | ☐      |
+| Task                                            | Owner          | Depends On       | Status |
+|-------------------------------------------------|----------------|------------------|--------|
+| `TraceNode` & `TraceEdge` models + migration (M3)| Hanamaraddi   | M2               | [TODO] |
+| GraphEngine: BFS + 6 pruning filters + cycles (M3)| Hanamaraddi  | M2               | [TODO] |
+| Cytoscape JSON serializer + `/trace` & `/graph` (M3)| Hanamaraddi| GraphEngine      | [TODO] |
+| Unit tests: BFS, all 6 pruning filters, cycles (M3)| Hanamaraddi | GraphEngine      | [TODO] |
+| `VASPLabel` & `VASPCandidate` models + migrations (M4)| Harshitha| —                | [TODO] |
+| Seed labels script (`app/scripts/seed_labels.py`) (M4)| Harshitha| Label model      | [TODO] |
+| Label matcher + 3 heuristic detectors (M4)      | Harshitha      | Seed labels      | [TODO] |
+| 6-signal scoring & ranking engine (M4)          | Harshitha      | Label matcher    | [TODO] |
+| `/candidates`, `/review`, `/labels` endpoints (M4)| Harshitha    | Ranking engine   | [TODO] |
+| Unit tests: matching, scoring, conflict res (M4)| Harshitha      | Ranking engine   | [TODO] |
+| Frontend: `CytoscapeGraph.tsx` + 3s polling (M7)| Krishnapriya   | M6               | [TODO] |
 
-**Exit Criteria:** Submit wallet → see pruned graph + ranked VASP candidates.
+**Exit Criteria:** Submit wallet → pruned graph rendered in Cytoscape + ranked VASP candidates.
 
 ---
 
-## Sprint 3 — Evidence & Polish (Days 17–23)
+## Sprint 3 — Evidence, Action Package & QA (Milestones 5, 7, 8)
 
-**Goal:** Action package generation + demo readiness.
+**Goal:** Action package PDF/JSON + Evidence UI + E2E acceptance suite.
 
-| Task                                            | Owner            | Depends On       | Status |
-|-------------------------------------------------|------------------|------------------|--------|
-| Evidence assembler: collect paths per candidate | Evidence Owner   | Ranking          | ☐      |
-| Action package generator (JSON output)          | Evidence Owner   | Evidence         | ☐      |
-| PDF export of action package                    | Evidence Owner   | Action package   | ☐      |
-| `GET /cases/{id}/evidence` endpoint             | Evidence Owner   | Evidence logic   | ☐      |
-| `GET /cases/{id}/action-package/export`         | Evidence Owner   | PDF generator    | ☐      |
-| Frontend: Evidence view (paths, provenance)     | Frontend Owner   | Evidence API     | ☐      |
-| Frontend: Action package download button        | Frontend Owner   | Export API       | ☐      |
-| Frontend: Dashboard / stats page                | Frontend Owner   | Cases API        | ☐      |
-| End-to-end test: complaint → action package     | All              | All above        | ☐      |
-| Load test with real TRON data (10 cases)        | Chain Owner      | Full pipeline    | ☐      |
-| Security review: no exposed secrets, CORS, etc. | Infra Owner      | All              | ☐      |
-| README.md + demo script                         | All              | All              | ☐      |
+| Task                                            | Owner          | Depends On       | Status |
+|-------------------------------------------------|----------------|------------------|--------|
+| `ActionPackage` model + migration (M5)          | Harshitha      | M4               | [TODO] |
+| Evidence assembler + deterministic action rules (M5)| Harshitha  | M4               | [TODO] |
+| ReportLab PDF generator (`ACTION_PACKAGE_SPEC`) (M5)| Harshitha  | Assembler        | [TODO] |
+| `/evidence`, `/action-package`, `/export` routes (M5)| Harshitha | PDF generator    | [TODO] |
+| Unit tests: evidence, actions, PDF bytes (M5)   | Harshitha      | M5 routes        | [TODO] |
+| Frontend: `CandidatePanel`, `EvidenceView`, `ActionPackageView` (M7)| Krishnapriya| M6 | [TODO] |
+| E2E integration tests: Scenarios A, B, C (M8)   | Krishnapriya   | M1–M5            | [TODO] |
+| Demo seed script (`app/scripts/seed_demo.py`) (M8)| Krishnapriya | M1–M5            | [TODO] |
+| Full CI & Docker Compose verification (M8)      | All (5)        | All above        | [TODO] |
 
-**Exit Criteria:** Live demo: enter complaint → automated trace → pruned graph →
-ranked VASP → download action package PDF.
+**Exit Criteria:** Live demo: enter complaint → automated trace → pruned graph → ranked VASP → download action package PDF.
 
 ---
 
 ## Sprint 4 — Demo Week (Days 24–28)
 
-| Task                                   | Owner | Status |
-|----------------------------------------|-------|--------|
-| Rehearse demo flow (3× minimum)        | All   | ☐      |
-| Fix demo-blocking bugs only            | All   | ☐      |
-| Prepare seed data for live demo        | All   | ☐      |
-| Record backup video demo               | All   | ☐      |
-| Prepare Q&A answers (risks, roadmap)   | All   | ☐      |
+| Task                                   | Owner   | Status |
+|----------------------------------------|---------|--------|
+| Rehearse demo flow (3× minimum)        | All (5) | [TODO] |
+| Fix demo-blocking bugs only            | All (5) | [TODO] |
+| Prepare seed data for live demo        | All (5) | [TODO] |
+| Record backup video demo               | All (5) | [TODO] |
+| Prepare Q&A answers (risks, roadmap)   | All (5) | [TODO] |
 
 ---
 

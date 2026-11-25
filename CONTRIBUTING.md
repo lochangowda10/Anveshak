@@ -16,9 +16,9 @@ main (protected — release baseline)
        └── docs/api-reference
 ```
 
-### The 4-Developer Sync Protocol
+### The 5-Developer Sync Protocol
 
-To avoid overlapping work across the four active developers:
+To avoid overlapping work across the five active developers (Lochan, Hanamaraddi, Harshitha, Haripriya, Krishnapriya):
 1. **Always sync before starting:** `git checkout dev && git pull origin dev`.
 2. **Claim task:** Mark task as `[WORKING: <Name>]` in `docs/SPRINT_PLAN.md` and push to `dev`.
 3. **Branch:** Create `feat/<task-name>` off `dev`.
