@@ -43,6 +43,7 @@ anveshak/
 
 ## Current Team Setup (5-Developer Active Sprint)
 
+> **Team Lead & Final PR Reviewer:** **Lochan** (reviews all PRs, enforces `CONTRIBUTING.md` + CI gates, and merges into `main`).
 > **5 developers** are actively driving implementation across 5 non-overlapping tracks.
 > Tasks are claimed asynchronously using the **Claim ➔ Working ➔ Finished** protocol in `docs/SPRINT_PLAN.md`.
 

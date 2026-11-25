@@ -98,9 +98,26 @@ Whenever either developer starts or completes a task:
 
 ## 🤖 Prompt for AI Coding Agents
 
-Give this exact prompt to your AI coding agent when starting work:
+Replace `<YourName>` (`Hanamaraddi`, `Harshitha`, `Haripriya`, or `Krishnapriya`) and paste this exact prompt into your AI coding agent:
 
-> Read `README.md`, `CONTEXT.md`, `docs/`, and all existing code. Build only the next milestone from `docs/MILESTONES.md`. Follow `docs/API_CONTRACT.md`, `docs/DATA_MODEL.md`, and `docs/GRAPH_ENGINE.md` exactly. Do not invent undocumented features, APIs, database fields, or UI behavior. If requirements conflict or are missing, stop and ask. After each milestone, add tests, update documentation, and provide run instructions.
+```text
+First run `git checkout dev && git pull origin dev` to get the latest code and specifications.
+
+Read `README.md`, `CONTEXT.md`, `OWNERSHIP.md`, `CONTRIBUTING.md`, `docs/DECISIONS.md`, and all files in `docs/`.
+
+You are working for `<YourName>`. Check your assigned Track in `OWNERSHIP.md` and your tasks in `docs/SPRINT_PLAN.md` and `docs/MILESTONES.md`.
+
+Rules:
+1. Do NOT touch files outside your assigned Track in `OWNERSHIP.md`.
+2. Before writing any code, mark your current task `[WORKING: <YourName>]` in `docs/SPRINT_PLAN.md`, commit, and push to `dev`.
+3. Create a feature branch (`feat/<task-name>`) off `dev` and build ONLY one milestone/task at a time.
+4. Follow `docs/DECISIONS.md`, `docs/API_CONTRACT.md`, `docs/DATA_MODEL.md`, `docs/GRAPH_ENGINE.md`, `docs/VASP_ATTRIBUTION.md`, `docs/UI_SPEC.md`, `docs/ACTION_PACKAGE_SPEC.md`, and `docs/DEPLOYMENT.md` exactly. Do not invent undocumented APIs, DB columns, or UI behavior.
+5. Write tests matching `docs/ACCEPTANCE_TESTS.md`, run all linters and tests (`ruff check .`, `black --check .`, `pytest`, or `tsc --noEmit` / `pnpm test`), mark your task `[FINISHED: <YourName>]` in `docs/SPRINT_PLAN.md`, push your branch, and open a PR for Team Lead (Lochan) review before merging to `main`.
+
+If any requirement conflicts or is missing, stop and ask before guessing.
+```
+
+> **Release Gate:** **Lochan (Team Lead)** reviews all PRs and merges verified milestones into `main`.
 
 ## License
 
